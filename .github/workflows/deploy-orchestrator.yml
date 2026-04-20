@@ -1,76 +1,81 @@
 name: Deployment orchestrator
 
-on:
-  workflow_call:
-    inputs:
-      runner_os:
-        description: 'Runner OS (ubuntu-latest or windows-latest)'
-        required: true
-        type: string
-      resource_group_name:
-        description: 'Resource Group Name (Optional)'
-        required: false
-        default: ''
-        type: string
-      waf_enabled:
-        description: 'Enable WAF'
-        required: false
-        default: false
-        type: boolean
-      EXP:
-        description: 'Enable EXP'
-        required: false
-        default: false
-        type: boolean
-      cleanup_resources:
-        description: 'Cleanup Deployed Resources'
-        required: false
-        default: false
-        type: boolean
-      run_e2e_tests:
-        description: 'Run End-to-End Tests'
-        required: false
-        default: 'GoldenPath-Testing'
-        type: string
-      existing_webapp_url:
-        description: 'Existing Container WebApp URL (Skips Deployment)'
-        required: false
-        default: ''
-        type: string
-      existing_admin_app_url:
-        description: 'Existing Admin WebApp URL (Skips Deployment)'
-        required: false
-        default: ''
-        type: string
-      trigger_type:
-        description: 'Trigger type (workflow_dispatch, pull_request, schedule)'
-        required: true
-        type: string
-      AZURE_ENV_LOG_ANALYTICS_WORKSPACE_ID:
-        description: 'Log Analytics Workspace ID (Optional)'
-        required: false
-        default: ''
-        type: string
-      AZURE_SEARCH_USE_INTEGRATED_VECTORIZATION:
-        description: 'Enable Azure Search Integrated Vectorization'
-        required: false
-        default: 'false'
-        type: string
-      AZURE_SEARCH_USE_SEMANTIC_SEARCH:
-        description: 'Enable Azure Search Semantic Search'
-        required: false
-        default: 'false'
-        type: string
-      USE_ADVANCED_IMAGE_PROCESSING:
-        description: 'Use Advanced Image Processing'
-        required: false
-        default: 'false'
-        type: string
-      DATABASE_TYPE:
-        description: 'Type of database to use'
-        required: false
-        default: 'PostgreSQL'
-        type: string
+# DISABLED: on:
+# DISABLED:   workflow_call:
+# DISABLED:     inputs:
+# DISABLED:       runner_os:
+# DISABLED:         description: 'Runner OS (ubuntu-latest or windows-latest)'
+# DISABLED:         required: true
+# DISABLED:         type: string
+# DISABLED:       resource_group_name:
+# DISABLED:         description: 'Resource Group Name (Optional)'
+# DISABLED:         required: false
+# DISABLED:         default: ''
+# DISABLED:         type: string
+# DISABLED:       waf_enabled:
+# DISABLED:         description: 'Enable WAF'
+# DISABLED:         required: false
+# DISABLED:         default: false
+# DISABLED:         type: boolean
+# DISABLED:       EXP:
+# DISABLED:         description: 'Enable EXP'
+# DISABLED:         required: false
+# DISABLED:         default: false
+# DISABLED:         type: boolean
+# DISABLED:       cleanup_resources:
+# DISABLED:         description: 'Cleanup Deployed Resources'
+# DISABLED:         required: false
+# DISABLED:         default: false
+# DISABLED:         type: boolean
+# DISABLED:       run_e2e_tests:
+# DISABLED:         description: 'Run End-to-End Tests'
+# DISABLED:         required: false
+# DISABLED:         default: 'GoldenPath-Testing'
+# DISABLED:         type: string
+# DISABLED:       existing_webapp_url:
+# DISABLED:         description: 'Existing Container WebApp URL (Skips Deployment)'
+# DISABLED:         required: false
+# DISABLED:         default: ''
+# DISABLED:         type: string
+# DISABLED:       existing_admin_app_url:
+# DISABLED:         description: 'Existing Admin WebApp URL (Skips Deployment)'
+# DISABLED:         required: false
+# DISABLED:         default: ''
+# DISABLED:         type: string
+# DISABLED:       trigger_type:
+# DISABLED:         description: 'Trigger type (workflow_dispatch, pull_request, schedule)'
+# DISABLED:         required: true
+# DISABLED:         type: string
+# DISABLED:       AZURE_ENV_LOG_ANALYTICS_WORKSPACE_ID:
+# DISABLED:         description: 'Log Analytics Workspace ID (Optional)'
+# DISABLED:         required: false
+# DISABLED:         default: ''
+# DISABLED:         type: string
+# DISABLED:       AZURE_SEARCH_USE_INTEGRATED_VECTORIZATION:
+# DISABLED:         description: 'Enable Azure Search Integrated Vectorization'
+# DISABLED:         required: false
+# DISABLED:         default: 'false'
+# DISABLED:         type: string
+# DISABLED:       AZURE_SEARCH_USE_SEMANTIC_SEARCH:
+# DISABLED:         description: 'Enable Azure Search Semantic Search'
+# DISABLED:         required: false
+# DISABLED:         default: 'false'
+# DISABLED:         type: string
+# DISABLED:       USE_ADVANCED_IMAGE_PROCESSING:
+# DISABLED:         description: 'Use Advanced Image Processing'
+# DISABLED:         required: false
+# DISABLED:         default: 'false'
+# DISABLED:         type: string
+# DISABLED:       DATABASE_TYPE:
+# DISABLED:         description: 'Type of database to use'
+# DISABLED:         required: false
+# DISABLED:         default: 'PostgreSQL'
+# DISABLED:         type: string
+# DISABLED: 
+on:  # TEMPORARILY DISABLED - all triggers removed
+  push:
+    branches:
+      - '__disabled__'
 
 env:
   AZURE_DEV_COLLECT_TELEMETRY: ${{ vars.AZURE_DEV_COLLECT_TELEMETRY }}

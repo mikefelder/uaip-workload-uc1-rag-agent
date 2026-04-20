@@ -1,24 +1,29 @@
 name: Test Workflow with Coverage
 
-on:
-  workflow_dispatch:
+# DISABLED: on:
+# DISABLED:   workflow_dispatch:
+# DISABLED:   push:
+# DISABLED:     branches: [main, dev, demo]
+# DISABLED:     paths:
+# DISABLED:       - 'code/**'
+# DISABLED:       - 'pyproject.toml'
+# DISABLED:       - 'package.json'
+# DISABLED:       - 'pytest.ini'
+# DISABLED:       - '.github/workflows/tests.yml'
+# DISABLED:   pull_request:
+# DISABLED:     branches: [main, dev, demo]
+# DISABLED:     types:
+# DISABLED:       - opened
+# DISABLED:       - ready_for_review
+# DISABLED:       - reopened
+# DISABLED:       - synchronize
+# DISABLED:   workflow_call:
+# DISABLED:   merge_group:
+# DISABLED: 
+on:  # TEMPORARILY DISABLED - all triggers removed
   push:
-    branches: [main, dev, demo]
-    paths:
-      - 'code/**'
-      - 'pyproject.toml'
-      - 'package.json'
-      - 'pytest.ini'
-      - '.github/workflows/tests.yml'
-  pull_request:
-    branches: [main, dev, demo]
-    types:
-      - opened
-      - ready_for_review
-      - reopened
-      - synchronize
-  workflow_call:
-  merge_group:
+    branches:
+      - '__disabled__'
 
 jobs:
   test_package:

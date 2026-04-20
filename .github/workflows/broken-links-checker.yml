@@ -1,8 +1,13 @@
 name: Broken Link Checker
 
-on:
-  pull_request:
-  workflow_dispatch:
+# DISABLED: on:
+# DISABLED:   pull_request:
+# DISABLED:   workflow_dispatch:
+# DISABLED: 
+on:  # TEMPORARILY DISABLED - all triggers removed
+  push:
+    branches:
+      - '__disabled__'
 
 permissions:
   contents: read

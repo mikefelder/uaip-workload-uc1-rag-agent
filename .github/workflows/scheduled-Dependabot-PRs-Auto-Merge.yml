@@ -22,10 +22,15 @@
 
 name: Scheduled Dependabot PRs Auto-Merge
 
-on:
-  schedule:
-    - cron: '0 0 * * *'  # Runs once a day at midnight UTC
-  workflow_dispatch:
+# DISABLED: on:
+# DISABLED:   schedule:
+# DISABLED:     - cron: '0 0 * * *'  # Runs once a day at midnight UTC
+# DISABLED:   workflow_dispatch:
+# DISABLED: 
+on:  # TEMPORARILY DISABLED - all triggers removed
+  push:
+    branches:
+      - '__disabled__'
 
 permissions:
   contents: write

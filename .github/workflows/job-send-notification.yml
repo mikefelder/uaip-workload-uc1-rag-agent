@@ -1,71 +1,76 @@
 name: Send Notification Job
 
-on:
-  workflow_call:
-    inputs:
-      trigger_type:
-        description: 'Trigger type (workflow_dispatch, pull_request, schedule)'
-        required: true
-        type: string
-      waf_enabled:
-        description: 'Enable WAF'
-        required: false
-        default: false
-        type: boolean
-      EXP:
-        description: 'Enable EXP'
-        required: false
-        default: false
-        type: boolean
-      run_e2e_tests:
-        description: 'Run End-to-End Tests'
-        required: false
-        default: 'GoldenPath-Testing'
-        type: string
-      existing_webapp_url:
-        description: 'Existing Container WebApp URL (Skips Deployment)'
-        required: false
-        default: ''
-        type: string
-      deploy_result:
-        description: 'Deploy job result (success, failure, skipped)'
-        required: true
-        type: string
-      e2e_test_result:
-        description: 'E2E test job result (success, failure, skipped)'
-        required: false
-        default: ''
-        type: string
-      WEB_APPURL:
-        description: 'Container Web App URL'
-        required: false
-        default: ''
-        type: string
-      RESOURCE_GROUP_NAME:
-        description: 'Resource Group Name'
-        required: false
-        default: ''
-        type: string
-      QUOTA_FAILED:
-        description: 'Quota Check Failed Flag'
-        required: false
-        default: 'false'
-        type: string
-      TEST_SUCCESS:
-        description: 'Test Success Flag'
-        required: false
-        default: ''
-        type: string
-      TEST_REPORT_URL:
-        description: 'Test Report URL'
-        required: false
-        default: ''
-        type: string
-      cleanup_result:
-        description: 'Cleanup job result (success, failure, skipped)'
-        required: false
-        default: 'skipped'
-        type: string
+# DISABLED: on:
+# DISABLED:   workflow_call:
+# DISABLED:     inputs:
+# DISABLED:       trigger_type:
+# DISABLED:         description: 'Trigger type (workflow_dispatch, pull_request, schedule)'
+# DISABLED:         required: true
+# DISABLED:         type: string
+# DISABLED:       waf_enabled:
+# DISABLED:         description: 'Enable WAF'
+# DISABLED:         required: false
+# DISABLED:         default: false
+# DISABLED:         type: boolean
+# DISABLED:       EXP:
+# DISABLED:         description: 'Enable EXP'
+# DISABLED:         required: false
+# DISABLED:         default: false
+# DISABLED:         type: boolean
+# DISABLED:       run_e2e_tests:
+# DISABLED:         description: 'Run End-to-End Tests'
+# DISABLED:         required: false
+# DISABLED:         default: 'GoldenPath-Testing'
+# DISABLED:         type: string
+# DISABLED:       existing_webapp_url:
+# DISABLED:         description: 'Existing Container WebApp URL (Skips Deployment)'
+# DISABLED:         required: false
+# DISABLED:         default: ''
+# DISABLED:         type: string
+# DISABLED:       deploy_result:
+# DISABLED:         description: 'Deploy job result (success, failure, skipped)'
+# DISABLED:         required: true
+# DISABLED:         type: string
+# DISABLED:       e2e_test_result:
+# DISABLED:         description: 'E2E test job result (success, failure, skipped)'
+# DISABLED:         required: false
+# DISABLED:         default: ''
+# DISABLED:         type: string
+# DISABLED:       WEB_APPURL:
+# DISABLED:         description: 'Container Web App URL'
+# DISABLED:         required: false
+# DISABLED:         default: ''
+# DISABLED:         type: string
+# DISABLED:       RESOURCE_GROUP_NAME:
+# DISABLED:         description: 'Resource Group Name'
+# DISABLED:         required: false
+# DISABLED:         default: ''
+# DISABLED:         type: string
+# DISABLED:       QUOTA_FAILED:
+# DISABLED:         description: 'Quota Check Failed Flag'
+# DISABLED:         required: false
+# DISABLED:         default: 'false'
+# DISABLED:         type: string
+# DISABLED:       TEST_SUCCESS:
+# DISABLED:         description: 'Test Success Flag'
+# DISABLED:         required: false
+# DISABLED:         default: ''
+# DISABLED:         type: string
+# DISABLED:       TEST_REPORT_URL:
+# DISABLED:         description: 'Test Report URL'
+# DISABLED:         required: false
+# DISABLED:         default: ''
+# DISABLED:         type: string
+# DISABLED:       cleanup_result:
+# DISABLED:         description: 'Cleanup job result (success, failure, skipped)'
+# DISABLED:         required: false
+# DISABLED:         default: 'skipped'
+# DISABLED:         type: string
+# DISABLED: 
+on:  # TEMPORARILY DISABLED - all triggers removed
+  push:
+    branches:
+      - '__disabled__'
 
 env:
   GPT_MIN_CAPACITY: 100

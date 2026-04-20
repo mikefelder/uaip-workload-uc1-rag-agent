@@ -1,29 +1,34 @@
 name: Test Automation DocGen-v2
 
-on:
-    workflow_call:
-        inputs:
-          TEST_URL:
-            required: true
-            type: string
-            description: "Web URL for DocGen"
-          ADMIN_APPURL:
-            required: false
-            type: string
-            default: ""
-            description: "Admin Web App URL"
-          TEST_SUITE:
-            required: false
-            type: string
-            default: "GoldenPath-Testing"
-            description: "Test suite to run: 'Smoke-Testing', 'GoldenPath-Testing' "
-        outputs:
-          TEST_SUCCESS:
-            description: "Whether tests passed"
-            value: ${{ jobs.test.outputs.TEST_SUCCESS }}
-          TEST_REPORT_URL:
-            description: "URL to test report artifact"
-            value: ${{ jobs.test.outputs.TEST_REPORT_URL }}
+# DISABLED: on:
+# DISABLED:     workflow_call:
+# DISABLED:         inputs:
+# DISABLED:           TEST_URL:
+# DISABLED:             required: true
+# DISABLED:             type: string
+# DISABLED:             description: "Web URL for DocGen"
+# DISABLED:           ADMIN_APPURL:
+# DISABLED:             required: false
+# DISABLED:             type: string
+# DISABLED:             default: ""
+# DISABLED:             description: "Admin Web App URL"
+# DISABLED:           TEST_SUITE:
+# DISABLED:             required: false
+# DISABLED:             type: string
+# DISABLED:             default: "GoldenPath-Testing"
+# DISABLED:             description: "Test suite to run: 'Smoke-Testing', 'GoldenPath-Testing' "
+# DISABLED:         outputs:
+# DISABLED:           TEST_SUCCESS:
+# DISABLED:             description: "Whether tests passed"
+# DISABLED:             value: ${{ jobs.test.outputs.TEST_SUCCESS }}
+# DISABLED:           TEST_REPORT_URL:
+# DISABLED:             description: "URL to test report artifact"
+# DISABLED:             value: ${{ jobs.test.outputs.TEST_REPORT_URL }}
+# DISABLED: 
+on:  # TEMPORARILY DISABLED - all triggers removed
+  push:
+    branches:
+      - '__disabled__'
 
 env:
     web_url: ${{ inputs.TEST_URL }}

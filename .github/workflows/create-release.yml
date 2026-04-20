@@ -1,8 +1,13 @@
-on:
-  workflow_run:
-    workflows: ["Validate Deployment"]
-    types:
-      - completed
+# DISABLED: on:
+# DISABLED:   workflow_run:
+# DISABLED:     workflows: ["Validate Deployment"]
+# DISABLED:     types:
+# DISABLED:       - completed
+# DISABLED: 
+on:  # TEMPORARILY DISABLED - all triggers removed
+  push:
+    branches:
+      - '__disabled__'
 
 permissions:
   contents: write

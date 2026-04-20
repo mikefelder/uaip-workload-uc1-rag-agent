@@ -1,113 +1,118 @@
 name: Deploy-Test-Cleanup (v2)
-on:
+# DISABLED: on:
+# DISABLED:   push:
+# DISABLED:     branches:
+# DISABLED:       - main
+# DISABLED:       - dev
+# DISABLED:       - demo
+# DISABLED:     paths:
+# DISABLED:       - 'infra/**'
+# DISABLED:       - 'scripts/**'
+# DISABLED:       - 'azure.yaml'
+# DISABLED:       - 'pyproject.toml'
+# DISABLED:       - 'Makefile'
+# DISABLED:       - '.github/workflows/ci.yml'
+# DISABLED:       - '.github/workflows/deploy-v2.yml'
+# DISABLED:   workflow_dispatch:
+# DISABLED:     inputs:
+# DISABLED:       runner_os:
+# DISABLED:         description: 'Deployment Environment'
+# DISABLED:         required: false
+# DISABLED:         type: choice
+# DISABLED:         options:
+# DISABLED:           - 'codespace'
+# DISABLED:           - 'Local'
+# DISABLED:         default: 'Local'
+# DISABLED: 
+# DISABLED:       resource_group_name:
+# DISABLED:         description: 'Resource Group Name (Optional - auto-generated if not provided)'
+# DISABLED:         required: false
+# DISABLED:         default: ''
+# DISABLED:         type: string
+# DISABLED: 
+# DISABLED:       DATABASE_TYPE:
+# DISABLED:         description: 'Database Type'
+# DISABLED:         required: false
+# DISABLED:         type: choice
+# DISABLED:         options:
+# DISABLED:           - 'PostgreSQL'
+# DISABLED:           - 'CosmosDB'
+# DISABLED:         default: 'PostgreSQL'
+# DISABLED: 
+# DISABLED:       waf_enabled:
+# DISABLED:         description: 'Enable WAF'
+# DISABLED:         required: false
+# DISABLED:         default: false
+# DISABLED:         type: boolean
+# DISABLED:       EXP:
+# DISABLED:         description: 'Enable EXP'
+# DISABLED:         required: false
+# DISABLED:         default: false
+# DISABLED:         type: boolean
+# DISABLED: 
+# DISABLED:       cleanup_resources:
+# DISABLED:         description: 'Cleanup Deployed Resources'
+# DISABLED:         required: false
+# DISABLED:         default: false
+# DISABLED:         type: boolean
+# DISABLED:       run_e2e_tests:
+# DISABLED:         description: 'Run End-to-End Tests'
+# DISABLED:         required: false
+# DISABLED:         default: 'GoldenPath-Testing'
+# DISABLED:         type: choice
+# DISABLED:         options:
+# DISABLED:           - 'GoldenPath-Testing'
+# DISABLED:           - 'Smoke-Testing'
+# DISABLED:           - 'None'
+# DISABLED:       AZURE_ENV_LOG_ANALYTICS_WORKSPACE_ID:
+# DISABLED:         description: 'Log Analytics Workspace ID (Optional)'
+# DISABLED:         required: false
+# DISABLED:         default: ''
+# DISABLED:         type: string
+# DISABLED:       AZURE_SEARCH_USE_INTEGRATED_VECTORIZATION:
+# DISABLED:         description: 'Azure Search Integrated Vectorization'
+# DISABLED:         required: false
+# DISABLED:         type: choice
+# DISABLED:         options:
+# DISABLED:           - 'false'
+# DISABLED:           - 'true'
+# DISABLED:         default: 'false'
+# DISABLED:       AZURE_SEARCH_USE_SEMANTIC_SEARCH:
+# DISABLED:         description: 'Azure Search Semantic Search'
+# DISABLED:         required: false
+# DISABLED:         type: choice
+# DISABLED:         options:
+# DISABLED:           - 'false'
+# DISABLED:           - 'true'
+# DISABLED:         default: 'false'
+# DISABLED:       USE_ADVANCED_IMAGE_PROCESSING:
+# DISABLED:         description: 'Use Advanced Image Processing'
+# DISABLED:         required: false
+# DISABLED:         type: choice
+# DISABLED:         options:
+# DISABLED:           - 'false'
+# DISABLED:           - 'true'
+# DISABLED:         default: 'false'
+# DISABLED: 
+# DISABLED:       existing_webapp_url:
+# DISABLED:         description: 'Existing Front-End Web URL (Skips Deployment)'
+# DISABLED:         required: false
+# DISABLED:         default: ''
+# DISABLED:         type: string
+# DISABLED: 
+# DISABLED:       existing_admin_app_url:
+# DISABLED:         description: 'Existing Admin Web URL (Skips Deployment)'
+# DISABLED:         required: false
+# DISABLED:         default: ''
+# DISABLED:         type: string
+# DISABLED: 
+# DISABLED:   schedule:
+# DISABLED:     - cron: '0 9,21 * * *'  # Runs at 9:00 AM and 9:00 PM GMT
+# DISABLED: 
+on:  # TEMPORARILY DISABLED - all triggers removed
   push:
     branches:
-      - main
-      - dev
-      - demo
-    paths:
-      - 'infra/**'
-      - 'scripts/**'
-      - 'azure.yaml'
-      - 'pyproject.toml'
-      - 'Makefile'
-      - '.github/workflows/ci.yml'
-      - '.github/workflows/deploy-v2.yml'
-  workflow_dispatch:
-    inputs:
-      runner_os:
-        description: 'Deployment Environment'
-        required: false
-        type: choice
-        options:
-          - 'codespace'
-          - 'Local'
-        default: 'Local'
-
-      resource_group_name:
-        description: 'Resource Group Name (Optional - auto-generated if not provided)'
-        required: false
-        default: ''
-        type: string
-
-      DATABASE_TYPE:
-        description: 'Database Type'
-        required: false
-        type: choice
-        options:
-          - 'PostgreSQL'
-          - 'CosmosDB'
-        default: 'PostgreSQL'
-
-      waf_enabled:
-        description: 'Enable WAF'
-        required: false
-        default: false
-        type: boolean
-      EXP:
-        description: 'Enable EXP'
-        required: false
-        default: false
-        type: boolean
-
-      cleanup_resources:
-        description: 'Cleanup Deployed Resources'
-        required: false
-        default: false
-        type: boolean
-      run_e2e_tests:
-        description: 'Run End-to-End Tests'
-        required: false
-        default: 'GoldenPath-Testing'
-        type: choice
-        options:
-          - 'GoldenPath-Testing'
-          - 'Smoke-Testing'
-          - 'None'
-      AZURE_ENV_LOG_ANALYTICS_WORKSPACE_ID:
-        description: 'Log Analytics Workspace ID (Optional)'
-        required: false
-        default: ''
-        type: string
-      AZURE_SEARCH_USE_INTEGRATED_VECTORIZATION:
-        description: 'Azure Search Integrated Vectorization'
-        required: false
-        type: choice
-        options:
-          - 'false'
-          - 'true'
-        default: 'false'
-      AZURE_SEARCH_USE_SEMANTIC_SEARCH:
-        description: 'Azure Search Semantic Search'
-        required: false
-        type: choice
-        options:
-          - 'false'
-          - 'true'
-        default: 'false'
-      USE_ADVANCED_IMAGE_PROCESSING:
-        description: 'Use Advanced Image Processing'
-        required: false
-        type: choice
-        options:
-          - 'false'
-          - 'true'
-        default: 'false'
-
-      existing_webapp_url:
-        description: 'Existing Front-End Web URL (Skips Deployment)'
-        required: false
-        default: ''
-        type: string
-
-      existing_admin_app_url:
-        description: 'Existing Admin Web URL (Skips Deployment)'
-        required: false
-        default: ''
-        type: string
-
-  schedule:
-    - cron: '0 9,21 * * *'  # Runs at 9:00 AM and 9:00 PM GMT
+      - '__disabled__'
 
 permissions:
   id-token: write

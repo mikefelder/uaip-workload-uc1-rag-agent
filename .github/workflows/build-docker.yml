@@ -1,20 +1,25 @@
 name: Reusable Docker build and push workflow
 
-on:
-  workflow_call:
-    inputs:
-      new_registry:
-        required: true
-        type: string
-      app_name:
-        required: true
-        type: string
-      dockerfile:
-        required: true
-        type: string
-      push:
-        required: true
-        type: boolean
+# DISABLED: on:
+# DISABLED:   workflow_call:
+# DISABLED:     inputs:
+# DISABLED:       new_registry:
+# DISABLED:         required: true
+# DISABLED:         type: string
+# DISABLED:       app_name:
+# DISABLED:         required: true
+# DISABLED:         type: string
+# DISABLED:       dockerfile:
+# DISABLED:         required: true
+# DISABLED:         type: string
+# DISABLED:       push:
+# DISABLED:         required: true
+# DISABLED:         type: boolean
+# DISABLED: 
+on:  # TEMPORARILY DISABLED - all triggers removed
+  push:
+    branches:
+      - '__disabled__'
 
 jobs:
   docker-build:

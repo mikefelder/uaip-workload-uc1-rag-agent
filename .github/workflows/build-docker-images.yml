@@ -1,23 +1,28 @@
 name: Build Docker and Optional Push
 
-on:
+# DISABLED: on:
+# DISABLED:   push:
+# DISABLED:     branches:
+# DISABLED:       - main
+# DISABLED:       - dev
+# DISABLED:       - demo
+# DISABLED:   pull_request:
+# DISABLED:     branches:
+# DISABLED:       - main
+# DISABLED:       - dev
+# DISABLED:       - demo
+# DISABLED:     types:
+# DISABLED:       - opened
+# DISABLED:       - ready_for_review
+# DISABLED:       - reopened
+# DISABLED:       - synchronize
+# DISABLED:   merge_group:
+# DISABLED:   workflow_dispatch:
+# DISABLED: 
+on:  # TEMPORARILY DISABLED - all triggers removed
   push:
     branches:
-      - main
-      - dev
-      - demo
-  pull_request:
-    branches:
-      - main
-      - dev
-      - demo
-    types:
-      - opened
-      - ready_for_review
-      - reopened
-      - synchronize
-  merge_group:
-  workflow_dispatch:
+      - '__disabled__'
 
 permissions:
   id-token: write

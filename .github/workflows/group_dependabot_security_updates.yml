@@ -19,28 +19,33 @@
 
 name: Group Dependabot PRs
 
-on:
-  schedule:
-    - cron: '0 0 * * *'  # Run daily at midnight UTC
-  workflow_dispatch:
-    inputs:
-      group_config_pip:
-        description: "Group name for pip ecosystem"
-        required: false
-        default: "backend"
-      group_config_npm:
-        description: "Group name for npm ecosystem"
-        required: false
-        default: "frontend"
-      group_config_yarn:
-        description: "Group name for yarn ecosystem"
-        required: false
-        default: "frontend"
-      dry_run:
-        description: "Run in dry-run mode (no changes will be pushed or PRs created/closed)"
-        required: false
-        default: false
-        type: boolean
+# DISABLED: on:
+# DISABLED:   schedule:
+# DISABLED:     - cron: '0 0 * * *'  # Run daily at midnight UTC
+# DISABLED:   workflow_dispatch:
+# DISABLED:     inputs:
+# DISABLED:       group_config_pip:
+# DISABLED:         description: "Group name for pip ecosystem"
+# DISABLED:         required: false
+# DISABLED:         default: "backend"
+# DISABLED:       group_config_npm:
+# DISABLED:         description: "Group name for npm ecosystem"
+# DISABLED:         required: false
+# DISABLED:         default: "frontend"
+# DISABLED:       group_config_yarn:
+# DISABLED:         description: "Group name for yarn ecosystem"
+# DISABLED:         required: false
+# DISABLED:         default: "frontend"
+# DISABLED:       dry_run:
+# DISABLED:         description: "Run in dry-run mode (no changes will be pushed or PRs created/closed)"
+# DISABLED:         required: false
+# DISABLED:         default: false
+# DISABLED:         type: boolean
+# DISABLED: 
+on:  # TEMPORARILY DISABLED - all triggers removed
+  push:
+    branches:
+      - '__disabled__'
 
 jobs:
   group-dependabot-prs:

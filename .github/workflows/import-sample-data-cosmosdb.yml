@@ -1,28 +1,33 @@
 name: Import Sample Data into CosmosDB
 
-on:
-  workflow_dispatch:
-    inputs:
-      RESOURCE_GROUP_NAME:
-        description: 'Azure Resource Group name'
-        required: true
-        type: string
-      WAF:
-        description: 'Is this a WAF deployment? (enables public access temporarily for data import and then disables it)'
-        required: false
-        type: boolean
-        default: false
-  workflow_call:
-    inputs:
-      RESOURCE_GROUP_NAME:
-        description: 'Azure Resource Group name'
-        required: true
-        type: string
-      WAF:
-        description: 'Is this a WAF deployment? (enables public access temporarily for data import and then disables it)'
-        required: false
-        type: boolean
-        default: false
+# DISABLED: on:
+# DISABLED:   workflow_dispatch:
+# DISABLED:     inputs:
+# DISABLED:       RESOURCE_GROUP_NAME:
+# DISABLED:         description: 'Azure Resource Group name'
+# DISABLED:         required: true
+# DISABLED:         type: string
+# DISABLED:       WAF:
+# DISABLED:         description: 'Is this a WAF deployment? (enables public access temporarily for data import and then disables it)'
+# DISABLED:         required: false
+# DISABLED:         type: boolean
+# DISABLED:         default: false
+# DISABLED:   workflow_call:
+# DISABLED:     inputs:
+# DISABLED:       RESOURCE_GROUP_NAME:
+# DISABLED:         description: 'Azure Resource Group name'
+# DISABLED:         required: true
+# DISABLED:         type: string
+# DISABLED:       WAF:
+# DISABLED:         description: 'Is this a WAF deployment? (enables public access temporarily for data import and then disables it)'
+# DISABLED:         required: false
+# DISABLED:         type: boolean
+# DISABLED:         default: false
+# DISABLED: 
+on:  # TEMPORARILY DISABLED - all triggers removed
+  push:
+    branches:
+      - '__disabled__'
 
 permissions:
   id-token: write

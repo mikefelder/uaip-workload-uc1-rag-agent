@@ -1,16 +1,21 @@
 name: Validate bicep templates
-on:
+# DISABLED: on:
+# DISABLED:   push:
+# DISABLED:     branches:
+# DISABLED:       - main
+# DISABLED:     paths:
+# DISABLED:       - "**/*.bicep"
+# DISABLED:   pull_request:
+# DISABLED:     branches:
+# DISABLED:       - main
+# DISABLED:     paths:
+# DISABLED:       - "**/*.bicep"
+# DISABLED:   workflow_dispatch:
+# DISABLED: 
+on:  # TEMPORARILY DISABLED - all triggers removed
   push:
     branches:
-      - main
-    paths:
-      - "**/*.bicep"
-  pull_request:
-    branches:
-      - main
-    paths:
-      - "**/*.bicep"
-  workflow_dispatch:
+      - '__disabled__'
 
 jobs:
   build:

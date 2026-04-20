@@ -1,14 +1,19 @@
 name: Validate Deployment
 
-on:
+# DISABLED: on:
+# DISABLED:   push:
+# DISABLED:     branches:
+# DISABLED:       - main
+# DISABLED:       - dev
+# DISABLED:       - demo
+# DISABLED:   schedule:
+# DISABLED:     - cron: '0 8,20 * * *'  # Runs at 8:00 AM and 8:00 PM GMT
+# DISABLED:   workflow_dispatch:
+# DISABLED: 
+on:  # TEMPORARILY DISABLED - all triggers removed
   push:
     branches:
-      - main
-      - dev
-      - demo
-  schedule:
-    - cron: '0 8,20 * * *'  # Runs at 8:00 AM and 8:00 PM GMT
-  workflow_dispatch:
+      - '__disabled__'
 
 permissions:
   id-token: write

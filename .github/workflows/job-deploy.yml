@@ -1,108 +1,113 @@
 name: Deploy Job
 
-on:
-  workflow_call:
-    inputs:
-      trigger_type:
-        description: 'Trigger type (workflow_dispatch, pull_request, schedule)'
-        required: true
-        type: string
-      runner_os:
-        description: 'Runner OS (ubuntu-latest or windows-latest)'
-        required: true
-        type: string
-      resource_group_name:
-        description: 'Resource Group Name (Optional)'
-        required: false
-        default: ''
-        type: string
-      waf_enabled:
-        description: 'Enable WAF'
-        required: false
-        default: false
-        type: boolean
-      EXP:
-        description: 'Enable EXP'
-        required: false
-        default: false
-        type: boolean
-      AZURE_ENV_LOG_ANALYTICS_WORKSPACE_ID:
-        description: 'Log Analytics Workspace ID (Optional)'
-        required: false
-        default: ''
-        type: string
-      cleanup_resources:
-        description: 'Cleanup Deployed Resources'
-        required: false
-        default: false
-        type: boolean
-      run_e2e_tests:
-        description: 'Run End-to-End Tests'
-        required: false
-        default: 'GoldenPath-Testing'
-        type: string
-      existing_webapp_url:
-        description: 'Existing Container WebApp URL (Skips Deployment)'
-        required: false
-        default: ''
-        type: string
-      AZURE_SEARCH_USE_INTEGRATED_VECTORIZATION:
-        description: 'Enable Azure Search Integrated Vectorization'
-        required: false
-        default: 'false'
-        type: string
-      AZURE_SEARCH_USE_SEMANTIC_SEARCH:
-        description: 'Enable Azure Search Semantic Search'
-        required: false
-        default: 'false'
-        type: string
-      USE_ADVANCED_IMAGE_PROCESSING:
-        description: 'Use Advanced Image Processing'
-        required: false
-        default: 'false'
-        type: string
-      DATABASE_TYPE:
-        description: 'Type of database to use'
-        required: false
-        default: 'PostgreSQL'
-        type: string
-    outputs:
-      RESOURCE_GROUP_NAME:
-        description: "Resource Group Name"
-        value: ${{ jobs.azure-setup.outputs.RESOURCE_GROUP_NAME }}
-      WEB_APPURL:
-        description: "Container Web App URL"
-        value: ${{ jobs.deploy-linux.outputs.WEB_APPURL || jobs.deploy-windows.outputs.WEB_APPURL }}
-      ADMIN_APPURL:
-        description: "Admin Web App URL"
-        value: ${{ jobs.deploy-linux.outputs.ADMIN_APPURL || jobs.deploy-windows.outputs.ADMIN_APPURL }}
-      ENV_NAME:
-        description: "Environment Name"
-        value: ${{ jobs.azure-setup.outputs.ENV_NAME }}
-      AZURE_LOCATION:
-        description: "Azure Location"
-        value: ${{ jobs.azure-setup.outputs.AZURE_LOCATION }}
-      AZURE_ENV_OPENAI_LOCATION:
-        description: "Azure OpenAI Location"
-        value: ${{ jobs.azure-setup.outputs.AZURE_ENV_OPENAI_LOCATION }}
-      IMAGE_TAG:
-        description: "Docker Image Tag Used"
-        value: ${{ jobs.azure-setup.outputs.IMAGE_TAG }}
-      QUOTA_FAILED:
-        description: "Quota Check Failed Flag"
-        value: ${{ jobs.azure-setup.outputs.QUOTA_FAILED }}
-      AZURE_POSTGRESQL_HOST_NAME:
-        description: "Azure PostgreSQL Host Name"
-        value: ${{ jobs.deploy-linux.outputs.AZURE_POSTGRESQL_HOST_NAME || jobs.deploy-windows.outputs.AZURE_POSTGRESQL_HOST_NAME }}
-      AZURE_SEARCH_SERVICE:
-        description: "Azure Search Service"
-        value: ${{ jobs.deploy-linux.outputs.AZURE_SEARCH_SERVICE || jobs.deploy-windows.outputs.AZURE_SEARCH_SERVICE }}
-      AZURE_BLOB_ACCOUNT_NAME:
-        description: "Azure Blob Account Name"
-        value: ${{ jobs.deploy-linux.outputs.AZURE_BLOB_ACCOUNT_NAME || jobs.deploy-windows.outputs.AZURE_BLOB_ACCOUNT_NAME }}
-      AZURE_SEARCH_INDEX:
-        description: "Azure Search Index"
-        value: ${{ jobs.deploy-linux.outputs.AZURE_SEARCH_INDEX || jobs.deploy-windows.outputs.AZURE_SEARCH_INDEX }}
+# DISABLED: on:
+# DISABLED:   workflow_call:
+# DISABLED:     inputs:
+# DISABLED:       trigger_type:
+# DISABLED:         description: 'Trigger type (workflow_dispatch, pull_request, schedule)'
+# DISABLED:         required: true
+# DISABLED:         type: string
+# DISABLED:       runner_os:
+# DISABLED:         description: 'Runner OS (ubuntu-latest or windows-latest)'
+# DISABLED:         required: true
+# DISABLED:         type: string
+# DISABLED:       resource_group_name:
+# DISABLED:         description: 'Resource Group Name (Optional)'
+# DISABLED:         required: false
+# DISABLED:         default: ''
+# DISABLED:         type: string
+# DISABLED:       waf_enabled:
+# DISABLED:         description: 'Enable WAF'
+# DISABLED:         required: false
+# DISABLED:         default: false
+# DISABLED:         type: boolean
+# DISABLED:       EXP:
+# DISABLED:         description: 'Enable EXP'
+# DISABLED:         required: false
+# DISABLED:         default: false
+# DISABLED:         type: boolean
+# DISABLED:       AZURE_ENV_LOG_ANALYTICS_WORKSPACE_ID:
+# DISABLED:         description: 'Log Analytics Workspace ID (Optional)'
+# DISABLED:         required: false
+# DISABLED:         default: ''
+# DISABLED:         type: string
+# DISABLED:       cleanup_resources:
+# DISABLED:         description: 'Cleanup Deployed Resources'
+# DISABLED:         required: false
+# DISABLED:         default: false
+# DISABLED:         type: boolean
+# DISABLED:       run_e2e_tests:
+# DISABLED:         description: 'Run End-to-End Tests'
+# DISABLED:         required: false
+# DISABLED:         default: 'GoldenPath-Testing'
+# DISABLED:         type: string
+# DISABLED:       existing_webapp_url:
+# DISABLED:         description: 'Existing Container WebApp URL (Skips Deployment)'
+# DISABLED:         required: false
+# DISABLED:         default: ''
+# DISABLED:         type: string
+# DISABLED:       AZURE_SEARCH_USE_INTEGRATED_VECTORIZATION:
+# DISABLED:         description: 'Enable Azure Search Integrated Vectorization'
+# DISABLED:         required: false
+# DISABLED:         default: 'false'
+# DISABLED:         type: string
+# DISABLED:       AZURE_SEARCH_USE_SEMANTIC_SEARCH:
+# DISABLED:         description: 'Enable Azure Search Semantic Search'
+# DISABLED:         required: false
+# DISABLED:         default: 'false'
+# DISABLED:         type: string
+# DISABLED:       USE_ADVANCED_IMAGE_PROCESSING:
+# DISABLED:         description: 'Use Advanced Image Processing'
+# DISABLED:         required: false
+# DISABLED:         default: 'false'
+# DISABLED:         type: string
+# DISABLED:       DATABASE_TYPE:
+# DISABLED:         description: 'Type of database to use'
+# DISABLED:         required: false
+# DISABLED:         default: 'PostgreSQL'
+# DISABLED:         type: string
+# DISABLED:     outputs:
+# DISABLED:       RESOURCE_GROUP_NAME:
+# DISABLED:         description: "Resource Group Name"
+# DISABLED:         value: ${{ jobs.azure-setup.outputs.RESOURCE_GROUP_NAME }}
+# DISABLED:       WEB_APPURL:
+# DISABLED:         description: "Container Web App URL"
+# DISABLED:         value: ${{ jobs.deploy-linux.outputs.WEB_APPURL || jobs.deploy-windows.outputs.WEB_APPURL }}
+# DISABLED:       ADMIN_APPURL:
+# DISABLED:         description: "Admin Web App URL"
+# DISABLED:         value: ${{ jobs.deploy-linux.outputs.ADMIN_APPURL || jobs.deploy-windows.outputs.ADMIN_APPURL }}
+# DISABLED:       ENV_NAME:
+# DISABLED:         description: "Environment Name"
+# DISABLED:         value: ${{ jobs.azure-setup.outputs.ENV_NAME }}
+# DISABLED:       AZURE_LOCATION:
+# DISABLED:         description: "Azure Location"
+# DISABLED:         value: ${{ jobs.azure-setup.outputs.AZURE_LOCATION }}
+# DISABLED:       AZURE_ENV_OPENAI_LOCATION:
+# DISABLED:         description: "Azure OpenAI Location"
+# DISABLED:         value: ${{ jobs.azure-setup.outputs.AZURE_ENV_OPENAI_LOCATION }}
+# DISABLED:       IMAGE_TAG:
+# DISABLED:         description: "Docker Image Tag Used"
+# DISABLED:         value: ${{ jobs.azure-setup.outputs.IMAGE_TAG }}
+# DISABLED:       QUOTA_FAILED:
+# DISABLED:         description: "Quota Check Failed Flag"
+# DISABLED:         value: ${{ jobs.azure-setup.outputs.QUOTA_FAILED }}
+# DISABLED:       AZURE_POSTGRESQL_HOST_NAME:
+# DISABLED:         description: "Azure PostgreSQL Host Name"
+# DISABLED:         value: ${{ jobs.deploy-linux.outputs.AZURE_POSTGRESQL_HOST_NAME || jobs.deploy-windows.outputs.AZURE_POSTGRESQL_HOST_NAME }}
+# DISABLED:       AZURE_SEARCH_SERVICE:
+# DISABLED:         description: "Azure Search Service"
+# DISABLED:         value: ${{ jobs.deploy-linux.outputs.AZURE_SEARCH_SERVICE || jobs.deploy-windows.outputs.AZURE_SEARCH_SERVICE }}
+# DISABLED:       AZURE_BLOB_ACCOUNT_NAME:
+# DISABLED:         description: "Azure Blob Account Name"
+# DISABLED:         value: ${{ jobs.deploy-linux.outputs.AZURE_BLOB_ACCOUNT_NAME || jobs.deploy-windows.outputs.AZURE_BLOB_ACCOUNT_NAME }}
+# DISABLED:       AZURE_SEARCH_INDEX:
+# DISABLED:         description: "Azure Search Index"
+# DISABLED:         value: ${{ jobs.deploy-linux.outputs.AZURE_SEARCH_INDEX || jobs.deploy-windows.outputs.AZURE_SEARCH_INDEX }}
+# DISABLED: 
+on:  # TEMPORARILY DISABLED - all triggers removed
+  push:
+    branches:
+      - '__disabled__'
 
 env:
   GPT_MIN_CAPACITY: 150

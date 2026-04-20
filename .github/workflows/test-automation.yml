@@ -1,14 +1,19 @@
 name: Test Automation CWYD
-on:
-    workflow_call:
-      inputs:
-        web_url:
-          required: true
-          type: string
-        admin_url:
-          required: true
-          type: string
-
+# DISABLED: on:
+# DISABLED:     workflow_call:
+# DISABLED:       inputs:
+# DISABLED:         web_url:
+# DISABLED:           required: true
+# DISABLED:           type: string
+# DISABLED:         admin_url:
+# DISABLED:           required: true
+# DISABLED:           type: string
+# DISABLED: 
+# DISABLED: 
+on:  # TEMPORARILY DISABLED - all triggers removed
+  push:
+    branches:
+      - '__disabled__'
 
 jobs:
   test:

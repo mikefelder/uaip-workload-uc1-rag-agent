@@ -1,45 +1,50 @@
 name: Cleanup Deployment Job
-on:
-  workflow_call:
-    inputs:
-      runner_os:
-        description: 'Runner OS (ubuntu-latest or windows-latest)'
-        required: true
-        type: string
-      trigger_type:
-        description: 'Trigger type (workflow_dispatch, pull_request, schedule)'
-        required: true
-        type: string
-      cleanup_resources:
-        description: 'Cleanup Deployed Resources'
-        required: false
-        default: false
-        type: boolean
-      existing_webapp_url:
-        description: 'Existing Container WebApp URL (Skips Deployment)'
-        required: false
-        default: ''
-        type: string
-      RESOURCE_GROUP_NAME:
-        description: 'Resource Group Name to cleanup'
-        required: true
-        type: string
-      AZURE_LOCATION:
-        description: 'Azure Location'
-        required: true
-        type: string
-      AZURE_ENV_OPENAI_LOCATION:
-        description: 'Azure OpenAI Location'
-        required: true
-        type: string
-      ENV_NAME:
-        description: 'Environment Name'
-        required: true
-        type: string
-      IMAGE_TAG:
-        description: 'Docker Image Tag'
-        required: true
-        type: string
+# DISABLED: on:
+# DISABLED:   workflow_call:
+# DISABLED:     inputs:
+# DISABLED:       runner_os:
+# DISABLED:         description: 'Runner OS (ubuntu-latest or windows-latest)'
+# DISABLED:         required: true
+# DISABLED:         type: string
+# DISABLED:       trigger_type:
+# DISABLED:         description: 'Trigger type (workflow_dispatch, pull_request, schedule)'
+# DISABLED:         required: true
+# DISABLED:         type: string
+# DISABLED:       cleanup_resources:
+# DISABLED:         description: 'Cleanup Deployed Resources'
+# DISABLED:         required: false
+# DISABLED:         default: false
+# DISABLED:         type: boolean
+# DISABLED:       existing_webapp_url:
+# DISABLED:         description: 'Existing Container WebApp URL (Skips Deployment)'
+# DISABLED:         required: false
+# DISABLED:         default: ''
+# DISABLED:         type: string
+# DISABLED:       RESOURCE_GROUP_NAME:
+# DISABLED:         description: 'Resource Group Name to cleanup'
+# DISABLED:         required: true
+# DISABLED:         type: string
+# DISABLED:       AZURE_LOCATION:
+# DISABLED:         description: 'Azure Location'
+# DISABLED:         required: true
+# DISABLED:         type: string
+# DISABLED:       AZURE_ENV_OPENAI_LOCATION:
+# DISABLED:         description: 'Azure OpenAI Location'
+# DISABLED:         required: true
+# DISABLED:         type: string
+# DISABLED:       ENV_NAME:
+# DISABLED:         description: 'Environment Name'
+# DISABLED:         required: true
+# DISABLED:         type: string
+# DISABLED:       IMAGE_TAG:
+# DISABLED:         description: 'Docker Image Tag'
+# DISABLED:         required: true
+# DISABLED:         type: string
+# DISABLED: 
+on:  # TEMPORARILY DISABLED - all triggers removed
+  push:
+    branches:
+      - '__disabled__'
 
 jobs:
   cleanup-deployment:

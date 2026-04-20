@@ -1,68 +1,73 @@
 name: Deploy Steps - Linux
 
-on:
-  workflow_call:
-    inputs:
-      ENV_NAME:
-        required: true
-        type: string
-      AZURE_ENV_OPENAI_LOCATION:
-        required: true
-        type: string
-      AZURE_LOCATION:
-        required: true
-        type: string
-      RESOURCE_GROUP_NAME:
-        required: true
-        type: string
-      IMAGE_TAG:
-        required: true
-        type: string
-      EXP:
-        required: true
-        type: string
-      WAF_ENABLED:
-        required: false
-        type: string
-        default: 'false'
-      AZURE_ENV_LOG_ANALYTICS_WORKSPACE_ID:
-        required: false
-        type: string
-      AZURE_SEARCH_USE_INTEGRATED_VECTORIZATION:
-        required: false
-        type: string
-        default: 'false'
-      AZURE_SEARCH_USE_SEMANTIC_SEARCH:
-        required: false
-        type: string
-        default: 'false'
-      USE_ADVANCED_IMAGE_PROCESSING:
-        required: false
-        type: string
-        default: 'false'
-      DATABASE_TYPE:
-        required: false
-        type: string
-        default: 'PostgreSQL'
-    outputs:
-      WEB_APPURL:
-        description: "Container Web App URL"
-        value: ${{ jobs.deploy-linux.outputs.WEB_APPURL }}
-      ADMIN_APPURL:
-        description: "Admin Web App URL"
-        value: ${{ jobs.deploy-linux.outputs.ADMIN_APPURL }}
-      AZURE_POSTGRESQL_HOST_NAME:
-        description: "Azure PostgreSQL Host Name"
-        value: ${{ jobs.deploy-linux.outputs.AZURE_POSTGRESQL_HOST_NAME }}
-      AZURE_SEARCH_SERVICE:
-        description: "Azure Search Service"
-        value: ${{ jobs.deploy-linux.outputs.AZURE_SEARCH_SERVICE }}
-      AZURE_BLOB_ACCOUNT_NAME:
-        description: "Azure Blob Account Name"
-        value: ${{ jobs.deploy-linux.outputs.AZURE_BLOB_ACCOUNT_NAME }}
-      AZURE_SEARCH_INDEX:
-        description: "Azure Search Index"
-        value: ${{ jobs.deploy-linux.outputs.AZURE_SEARCH_INDEX }}
+# DISABLED: on:
+# DISABLED:   workflow_call:
+# DISABLED:     inputs:
+# DISABLED:       ENV_NAME:
+# DISABLED:         required: true
+# DISABLED:         type: string
+# DISABLED:       AZURE_ENV_OPENAI_LOCATION:
+# DISABLED:         required: true
+# DISABLED:         type: string
+# DISABLED:       AZURE_LOCATION:
+# DISABLED:         required: true
+# DISABLED:         type: string
+# DISABLED:       RESOURCE_GROUP_NAME:
+# DISABLED:         required: true
+# DISABLED:         type: string
+# DISABLED:       IMAGE_TAG:
+# DISABLED:         required: true
+# DISABLED:         type: string
+# DISABLED:       EXP:
+# DISABLED:         required: true
+# DISABLED:         type: string
+# DISABLED:       WAF_ENABLED:
+# DISABLED:         required: false
+# DISABLED:         type: string
+# DISABLED:         default: 'false'
+# DISABLED:       AZURE_ENV_LOG_ANALYTICS_WORKSPACE_ID:
+# DISABLED:         required: false
+# DISABLED:         type: string
+# DISABLED:       AZURE_SEARCH_USE_INTEGRATED_VECTORIZATION:
+# DISABLED:         required: false
+# DISABLED:         type: string
+# DISABLED:         default: 'false'
+# DISABLED:       AZURE_SEARCH_USE_SEMANTIC_SEARCH:
+# DISABLED:         required: false
+# DISABLED:         type: string
+# DISABLED:         default: 'false'
+# DISABLED:       USE_ADVANCED_IMAGE_PROCESSING:
+# DISABLED:         required: false
+# DISABLED:         type: string
+# DISABLED:         default: 'false'
+# DISABLED:       DATABASE_TYPE:
+# DISABLED:         required: false
+# DISABLED:         type: string
+# DISABLED:         default: 'PostgreSQL'
+# DISABLED:     outputs:
+# DISABLED:       WEB_APPURL:
+# DISABLED:         description: "Container Web App URL"
+# DISABLED:         value: ${{ jobs.deploy-linux.outputs.WEB_APPURL }}
+# DISABLED:       ADMIN_APPURL:
+# DISABLED:         description: "Admin Web App URL"
+# DISABLED:         value: ${{ jobs.deploy-linux.outputs.ADMIN_APPURL }}
+# DISABLED:       AZURE_POSTGRESQL_HOST_NAME:
+# DISABLED:         description: "Azure PostgreSQL Host Name"
+# DISABLED:         value: ${{ jobs.deploy-linux.outputs.AZURE_POSTGRESQL_HOST_NAME }}
+# DISABLED:       AZURE_SEARCH_SERVICE:
+# DISABLED:         description: "Azure Search Service"
+# DISABLED:         value: ${{ jobs.deploy-linux.outputs.AZURE_SEARCH_SERVICE }}
+# DISABLED:       AZURE_BLOB_ACCOUNT_NAME:
+# DISABLED:         description: "Azure Blob Account Name"
+# DISABLED:         value: ${{ jobs.deploy-linux.outputs.AZURE_BLOB_ACCOUNT_NAME }}
+# DISABLED:       AZURE_SEARCH_INDEX:
+# DISABLED:         description: "Azure Search Index"
+# DISABLED:         value: ${{ jobs.deploy-linux.outputs.AZURE_SEARCH_INDEX }}
+# DISABLED: 
+on:  # TEMPORARILY DISABLED - all triggers removed
+  push:
+    branches:
+      - '__disabled__'
 
 jobs:
   deploy-linux:
