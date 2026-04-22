@@ -55,8 +55,19 @@ Python backend with a React/TypeScript frontend. Azure OpenAI handles inference,
 
 This fork adds the following, aligned to the PoC evaluation criteria:
 
-1. OpenTelemetry instrumentation — spans for query, retrieval, and LLM inference stages
-2. Azure API Management AI gateway — fronts Azure OpenAI with rate limiting, failover, and token tracking
+1. **OpenTelemetry instrumentation** — distributed tracing across the full RAG pipeline:
+   - `code/app.py` — configures Azure Monitor + optional OTLP exporter (dual-export to UC3 governance collector)
+   - `code/backend/batch/utilities/orchestrator/orchestrator_base.py` — `rag.pipeline` root span wrapping the entire orchestration cycle
+   - `code/backend/batch/utilities/tools/question_answer_tool.py` — `rag.retrieval` and `rag.generation` child spans with token/chunk attributes
+   - `code/backend/batch/utilities/helpers/llm_helper.py` — `llm.chat`, `llm.completion`, `llm.embedding` spans with model/deployment attributes
+   - Auto-instrumented HTTP calls via `opentelemetry-instrumentation-httpx`
+
+2. **Azure API Management AI gateway** — 3-way routing in `llm_helper.py`:
+   - **Gateway mode** (`AZURE_APIM_GATEWAY_URL` + `AZURE_APIM_SUBSCRIPTION_KEY` set) — all LLM calls route through APIM; APIM authenticates to AI Foundry via managed identity; UC1 authenticates to APIM with subscription key
+   - **API key mode** — direct to Azure OpenAI with key-based auth (original behaviour)
+   - **RBAC mode** — direct to Azure OpenAI with `DefaultAzureCredential` (managed identity)
+   - Routing applies to all client creation paths: `get_llm()`, `get_streaming_llm()`, `get_chat_llm()`, `get_embedding_llm()`
+
 3. Content Safety guardrails — prompt injection detection and content filtering via Azure Content Safety
 4. LLM-as-Judge evaluation pipeline — automated scoring for correctness, relevance, and groundedness
 5. Governance and access control — Entra ID auth with AI Search security filters for per-department data scoping
@@ -175,6 +186,18 @@ See the [deployment guide](./docs/LOCAL_DEPLOYMENT.md) for more details includin
 - East US 2
 - Japan East
 - UK South
+
+### AI Gateway environment variables
+
+The following variables control APIM gateway routing. When both are set, all LLM calls
+route through APIM instead of calling Azure OpenAI directly. See `.env.sample` for details.
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `AZURE_APIM_GATEWAY_URL` | For gateway mode | APIM gateway base URL (e.g. `https://ai-alz-apim-fp3g.azure-api.net`) |
+| `AZURE_APIM_SUBSCRIPTION_KEY` | For gateway mode | APIM subscription key (primary or secondary) |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | No | OTLP gRPC endpoint for UC3 governance collector (e.g. `http://localhost:4317`) |
+| `APPLICATIONINSIGHTS_CONNECTION_STRING` | Yes (in Azure) | Azure Monitor connection string for traces |
 
 ### After deployment
 
