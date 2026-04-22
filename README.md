@@ -21,7 +21,7 @@ Python backend with a React/TypeScript frontend. Azure OpenAI handles inference,
 +--------+---------+
          |
 +--------v------------------------------------------+
-|         Python Backend (App Service)               |
+|         Python Backend (Container App)             |
 |                                                    |
 |  +-------------+  +------------------------+      |
 |  | Orchestrator |  | Azure Content Safety   |      |
