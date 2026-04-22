@@ -1,6 +1,6 @@
 name: Reusable Docker build and push workflow
 
-# DISABLED: on:
+we # DISABLED: on:
 # DISABLED:   workflow_call:
 # DISABLED:     inputs:
 # DISABLED:       new_registry:
