@@ -8,10 +8,12 @@ from semantic_kernel.connectors.ai.open_ai.prompt_execution_settings.azure_chat_
     AzureChatPromptExecutionSettings,
 )
 from azure.ai.ml import MLClient
+from opentelemetry import trace
 from .azure_credential_utils import get_azure_credential
 from .env_helper import EnvHelper
 
 logger = logging.getLogger(__name__)
+_tracer = trace.get_tracer("uc1-rag-agent")
 
 
 class LLMHelper:
@@ -136,22 +138,36 @@ class LLMHelper:
     def get_chat_completion_with_functions(
         self, messages: list[dict], functions: list[dict], function_call: str = "auto"
     ):
-        return self.openai_client.chat.completions.create(
-            model=self.llm_model,
-            messages=messages,
-            functions=functions,
-            function_call=function_call,
-        )
+        with _tracer.start_as_current_span("llm.chat_completion") as span:
+            span.set_attribute("gen_ai.system", "azure_openai")
+            span.set_attribute("gen_ai.request.model", self.llm_model)
+            result = self.openai_client.chat.completions.create(
+                model=self.llm_model,
+                messages=messages,
+                functions=functions,
+                function_call=function_call,
+            )
+            if result.usage:
+                span.set_attribute("gen_ai.usage.prompt_tokens", result.usage.prompt_tokens)
+                span.set_attribute("gen_ai.usage.completion_tokens", result.usage.completion_tokens)
+            return result
 
     def get_chat_completion(
         self, messages: list[dict], model: str | None = None, **kwargs
     ):
-        return self.openai_client.chat.completions.create(
-            model=model or self.llm_model,
-            messages=messages,
-            max_tokens=self.llm_max_tokens,
-            **kwargs
-        )
+        with _tracer.start_as_current_span("llm.chat_completion") as span:
+            span.set_attribute("gen_ai.system", "azure_openai")
+            span.set_attribute("gen_ai.request.model", model or self.llm_model)
+            result = self.openai_client.chat.completions.create(
+                model=model or self.llm_model,
+                messages=messages,
+                max_tokens=self.llm_max_tokens,
+                **kwargs
+            )
+            if result.usage:
+                span.set_attribute("gen_ai.usage.prompt_tokens", result.usage.prompt_tokens)
+                span.set_attribute("gen_ai.usage.completion_tokens", result.usage.completion_tokens)
+            return result
 
     def get_sk_chat_completion_service(self, service_id: str):
         if self.auth_type_keys:

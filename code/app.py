@@ -5,7 +5,9 @@ This module contains the entry point for the application.
 import os
 import logging
 from azure.monitor.opentelemetry import configure_azure_monitor
+from opentelemetry import trace
 from opentelemetry.instrumentation.httpx import HTTPXClientInstrumentor
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
 logging.captureWarnings(True)
 
@@ -32,6 +34,20 @@ for logger_name in AZURE_LOGGING_PACKAGES:
 if os.getenv("APPLICATIONINSIGHTS_ENABLED", "false").lower() == "true":
     configure_azure_monitor()
     HTTPXClientInstrumentor().instrument()  # httpx is used by openai
+
+# OTLP exporter — sends spans to the UC3 governance OTEL collector (or any
+# OTLP-compatible backend) in addition to Azure Monitor.
+otlp_endpoint = os.environ.get("OTEL_EXPORTER_OTLP_ENDPOINT")
+if otlp_endpoint:
+    from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
+        OTLPSpanExporter,
+    )
+
+    provider = trace.get_tracer_provider()
+    if hasattr(provider, "add_span_processor"):
+        provider.add_span_processor(
+            BatchSpanProcessor(OTLPSpanExporter(endpoint=otlp_endpoint))
+        )
 
 # pylint: disable=wrong-import-position
 from create_app import create_app  # noqa: E402

@@ -2,6 +2,7 @@ import json
 import logging
 import warnings
 
+from opentelemetry import trace
 from ..common.answer import Answer
 from ..common.source_document import SourceDocument
 from ..helpers.azure_blob_storage_client import AzureBlobStorageClient
@@ -14,6 +15,7 @@ from .answering_tool_base import AnsweringToolBase
 from openai.types.chat import ChatCompletion
 
 logger = logging.getLogger(__name__)
+_tracer = trace.get_tracer("uc1-rag-agent")
 
 
 class QuestionAnswerTool(AnsweringToolBase):
@@ -157,7 +159,12 @@ class QuestionAnswerTool(AnsweringToolBase):
 
     def answer_question(self, question: str, chat_history: list[dict], **kwargs):
         logger.info("Answering question")
-        source_documents = Search.get_source_documents(self.search_handler, question)
+
+        # --- Retrieval span ---
+        with _tracer.start_as_current_span("rag.retrieval") as retrieval_span:
+            retrieval_span.set_attribute("rag.stage", "retrieval")
+            source_documents = Search.get_source_documents(self.search_handler, question)
+            retrieval_span.set_attribute("rag.documents_retrieved", len(source_documents))
 
         if self.env_helper.USE_ADVANCED_IMAGE_PROCESSING:
             image_urls = self.create_image_url_list(source_documents)
@@ -181,7 +188,18 @@ class QuestionAnswerTool(AnsweringToolBase):
 
         llm_helper = LLMHelper()
 
-        response = llm_helper.get_chat_completion(messages, model=model, temperature=0)
+        # --- Generation span ---
+        with _tracer.start_as_current_span("rag.generation") as gen_span:
+            gen_span.set_attribute("rag.stage", "generation")
+            gen_span.set_attribute("gen_ai.system", "azure_openai")
+            gen_span.set_attribute("gen_ai.request.model", model or llm_helper.llm_model)
+
+            response = llm_helper.get_chat_completion(messages, model=model, temperature=0)
+
+            gen_span.set_attribute("gen_ai.response.model", model or llm_helper.llm_model)
+            gen_span.set_attribute("gen_ai.usage.prompt_tokens", response.usage.prompt_tokens)
+            gen_span.set_attribute("gen_ai.usage.completion_tokens", response.usage.completion_tokens)
+
         clean_answer = self.format_answer_from_response(
             response, question, source_documents
         )
