@@ -22,8 +22,18 @@ class LLMHelper:
         self.env_helper: EnvHelper = EnvHelper()
         self.auth_type_keys = self.env_helper.is_auth_type_keys()
         self.token_provider = self.env_helper.AZURE_TOKEN_PROVIDER
+        self.use_gateway = self.env_helper.USE_APIM_GATEWAY
 
-        if self.auth_type_keys:
+        if self.use_gateway:
+            # Route through APIM AI Gateway — APIM handles backend auth
+            # via managed identity; we authenticate to APIM with sub key.
+            logger.info("Using APIM AI Gateway: %s", self.env_helper.AZURE_APIM_GATEWAY_URL)
+            self.openai_client = AzureOpenAI(
+                azure_endpoint=self.env_helper.AZURE_APIM_GATEWAY_URL,
+                api_version=self.env_helper.AZURE_OPENAI_API_VERSION,
+                api_key=self.env_helper.AZURE_APIM_SUBSCRIPTION_KEY,
+            )
+        elif self.auth_type_keys:
             self.openai_client = AzureOpenAI(
                 azure_endpoint=self.env_helper.AZURE_OPENAI_ENDPOINT,
                 api_version=self.env_helper.AZURE_OPENAI_API_VERSION,
@@ -47,7 +57,16 @@ class LLMHelper:
         logger.info("Initializing LLMHelper completed")
 
     def get_llm(self):
-        if self.auth_type_keys:
+        if self.use_gateway:
+            return AzureChatOpenAI(
+                deployment_name=self.llm_model,
+                temperature=0,
+                max_tokens=self.llm_max_tokens,
+                openai_api_version=self.openai_client._api_version,
+                azure_endpoint=self.env_helper.AZURE_APIM_GATEWAY_URL,
+                api_key=self.env_helper.AZURE_APIM_SUBSCRIPTION_KEY,
+            )
+        elif self.auth_type_keys:
             return AzureChatOpenAI(
                 deployment_name=self.llm_model,
                 temperature=0,
@@ -100,7 +119,15 @@ class LLMHelper:
         if supports_dimensions and self.env_helper.AZURE_SEARCH_DIMENSIONS:
             dimensions = int(self.env_helper.AZURE_SEARCH_DIMENSIONS)
 
-        if self.auth_type_keys:
+        if self.use_gateway:
+            return AzureOpenAIEmbeddings(
+                azure_endpoint=self.env_helper.AZURE_APIM_GATEWAY_URL,
+                api_key=self.env_helper.AZURE_APIM_SUBSCRIPTION_KEY,
+                azure_deployment=self.embedding_model,
+                dimensions=dimensions,
+                chunk_size=1,
+            )
+        elif self.auth_type_keys:
             return AzureOpenAIEmbeddings(
                 azure_endpoint=self.env_helper.AZURE_OPENAI_ENDPOINT,
                 api_key=self.env_helper.OPENAI_API_KEY,
@@ -141,6 +168,7 @@ class LLMHelper:
         with _tracer.start_as_current_span("llm.chat_completion") as span:
             span.set_attribute("gen_ai.system", "azure_openai")
             span.set_attribute("gen_ai.request.model", self.llm_model)
+            span.set_attribute("gen_ai.gateway", "apim" if self.use_gateway else "direct")
             result = self.openai_client.chat.completions.create(
                 model=self.llm_model,
                 messages=messages,
@@ -158,6 +186,7 @@ class LLMHelper:
         with _tracer.start_as_current_span("llm.chat_completion") as span:
             span.set_attribute("gen_ai.system", "azure_openai")
             span.set_attribute("gen_ai.request.model", model or self.llm_model)
+            span.set_attribute("gen_ai.gateway", "apim" if self.use_gateway else "direct")
             result = self.openai_client.chat.completions.create(
                 model=model or self.llm_model,
                 messages=messages,
@@ -170,7 +199,15 @@ class LLMHelper:
             return result
 
     def get_sk_chat_completion_service(self, service_id: str):
-        if self.auth_type_keys:
+        if self.use_gateway:
+            return AzureChatCompletion(
+                service_id=service_id,
+                deployment_name=self.llm_model,
+                endpoint=self.env_helper.AZURE_APIM_GATEWAY_URL,
+                api_version=self.env_helper.AZURE_OPENAI_API_VERSION,
+                api_key=self.env_helper.AZURE_APIM_SUBSCRIPTION_KEY,
+            )
+        elif self.auth_type_keys:
             return AzureChatCompletion(
                 service_id=service_id,
                 deployment_name=self.llm_model,

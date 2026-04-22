@@ -258,6 +258,15 @@ class EnvHelper:
                 "AZURE_COMPUTER_VISION_KEY"
             )
 
+        # APIM AI Gateway — optional centralized gateway for model access
+        self.AZURE_APIM_GATEWAY_URL = os.environ.get("AZURE_APIM_GATEWAY_URL", "")
+        self.AZURE_APIM_SUBSCRIPTION_KEY = os.environ.get(
+            "AZURE_APIM_SUBSCRIPTION_KEY", ""
+        )
+        self.USE_APIM_GATEWAY = bool(
+            self.AZURE_APIM_GATEWAY_URL and self.AZURE_APIM_SUBSCRIPTION_KEY
+        )
+
         # Set env for Azure OpenAI
         self.AZURE_OPENAI_ENDPOINT = os.environ.get(
             "AZURE_OPENAI_ENDPOINT",
