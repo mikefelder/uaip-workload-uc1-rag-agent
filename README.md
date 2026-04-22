@@ -236,3 +236,123 @@ Some of the sample data was generated using AI and is for illustrative purposes 
 This repository is licensed under the [MIT License](LICENSE.md).
 
 The data set under `/data` is licensed under the [CDLA-Permissive-2 License](CDLA-Permissive-2.md).
+
+---
+
+## April 2026 Microsoft Foundry — Impact Analysis & Roadmap
+
+Microsoft's April 2026 Foundry announcements introduce several capabilities that directly improve the quality, observability, and governance of the UC1 RAG pipeline. This section captures the analysis, action items, and implementation plan.
+
+### Impact Summary
+
+| Feature | GA / Preview | UC1 Impact | Priority |
+|-|-|-|-|
+| Foundry RAG Evaluators (`azure-ai-evaluation`) | GA | Add `GroundednessEvaluator`, `RetrievalEvaluator`, `RelevanceEvaluator` as pytest CI gate | **IMMEDIATE** |
+| Foundry Observability — OTel trace linkage | GA | Evaluation results now link back to individual OTel traces; enables per-query quality debugging | **IMMEDIATE** |
+| AI Red Teaming Agent | GA | Run adversarial XPIA (indirect prompt injection) tests against the RAG pipeline in CI; the document corpus is an injection surface | Short-term |
+| Foundry Toolbox (MCP) | Public Preview | Replace direct Azure AI Search SDK calls with the managed `builtin.ai_search` MCP tool via Foundry Toolbox; centralises key management and auth | Medium-term |
+| Foundry Memory | Public Preview | Replace PostgreSQL chat-history with `FoundryMemoryProvider` for cross-session context; eliminates the PostgreSQL dependency for pure chat-history use cases | Medium-term |
+| Agent 365 Tenant Registry | GA | Register the UC1 RAG assistant as a tenant-managed agent with lifecycle policies and Defender/Purview integration | Medium-term |
+
+---
+
+### Immediate Action: RAG Quality CI Gate
+
+**Why**: UC1 is a production RAG assistant. Without automated quality gates, hallucinated or under-grounded responses can reach users. The Foundry Evaluation SDK provides LLM-as-a-judge evaluators that enforce minimum quality thresholds on every PR.
+
+**What to implement**:
+
+1. Add `azure-ai-evaluation>=0.5.0` to `pyproject.toml` dev dependencies.
+2. Create `code/tests/evaluation/test_rag_quality.py` with three evaluators running against a golden JSONL dataset:
+   - **`GroundednessEvaluator`** — ensures every answer is traceable to retrieved context (score ≥ 3/5)
+   - **`RetrievalEvaluator`** — confirms context chunks are relevant to the query (score ≥ 3/5)
+   - **`RelevanceEvaluator`** — validates the answer addresses the user's question (score ≥ 3/5)
+3. Create `code/tests/evaluation/data/rag_golden_dataset.jsonl` — golden Q&A pairs drawn from the sample contract dataset.
+4. Wire into `Makefile` target `make eval` and GitHub Actions CI job `rag-quality-gate`.
+
+**SDK API** (`azure-ai-evaluation`):
+
+```python
+from azure.ai.evaluation import (
+    GroundednessEvaluator,
+    RetrievalEvaluator,
+    RelevanceEvaluator,
+    AzureOpenAIModelConfiguration,
+    evaluate,
+)
+
+model_config = AzureOpenAIModelConfiguration(
+    azure_endpoint=os.environ["AZURE_OPENAI_ENDPOINT"],
+    azure_deployment=os.environ["AZURE_OPENAI_DEPLOYMENT_NAME"],  # gpt-4o-mini for eval
+    api_version="2024-12-01-preview",
+)
+
+result = evaluate(
+    data="tests/evaluation/data/rag_golden_dataset.jsonl",
+    evaluators={
+        "groundedness": GroundednessEvaluator(model_config),
+        "retrieval":    RetrievalEvaluator(model_config),
+        "relevance":    RelevanceEvaluator(model_config),
+    },
+    evaluator_config={
+        "groundedness": {"column_mapping": {"query": "${data.query}", "context": "${data.context}", "response": "${data.response}"}},
+        "retrieval":    {"column_mapping": {"query": "${data.query}", "context": "${data.context}"}},
+        "relevance":    {"column_mapping": {"query": "${data.query}", "response": "${data.response}"}},
+    },
+)
+# CI gate: fail if mean score < 3.0
+assert result["metrics"]["groundedness.groundedness"] >= 3.0
+assert result["metrics"]["retrieval.retrieval"] >= 3.0
+assert result["metrics"]["relevance.relevance"] >= 3.0
+```
+
+Scores are 1–5 (pass threshold ≥ 3). Results can optionally be logged to a Foundry project for trend tracking.
+
+**Implementation status**: See `code/tests/evaluation/test_rag_quality.py` (implemented).
+
+---
+
+### Short-term Action: AI Red Teaming for Indirect Prompt Injection
+
+**Why**: UC1 retrieves content from user-uploaded documents. A malicious document could embed instructions that manipulate the LLM — an Indirect Prompt Injection (XPIA) attack. The Foundry `IndirectAttackEvaluator` (GA) detects whether retrieved context is being exploited.
+
+**What to implement**:
+
+```python
+from azure.ai.evaluation import IndirectAttackEvaluator
+
+xpia_eval = IndirectAttackEvaluator(
+    azure_ai_project={"subscription_id": "...", "resource_group": "...", "project_name": "..."},
+    credential=DefaultAzureCredential(),
+)
+```
+
+Run against the same golden dataset in a weekly scheduled CI job (not every PR — this calls Content Safety and incurs usage costs).
+
+---
+
+### Medium-term: Foundry Toolbox (MCP for AI Search)
+
+**Why**: UC1 currently calls `azure-search-documents` SDK directly from `llm_helper.py`. The Foundry Toolbox wraps AI Search as a managed MCP tool with centralised Entra identity, no SDK changes in application code, and automatic audit logging through APIM.
+
+**Migration path**:
+
+```python
+# Current (direct SDK)
+from azure.search.documents import SearchClient
+# → Replace with Foundry Toolbox MCP endpoint
+# POST https://<foundry>.services.ai.azure.com/api/projects/<project>/toolbox/search-tools/mcp
+# tool: builtin.ai_search / builtin.web_search
+```
+
+No changes to the RAG orchestration logic — only the retrieval call site changes.
+
+---
+
+### Medium-term: Foundry Memory (Replace PostgreSQL Chat History)
+
+**Why**: PostgreSQL is the highest-operational-cost component in UC1 (requires a Flexible Server, schema migrations, connection pooling). For pure chat-history use cases, Foundry Memory (`FoundryMemoryProvider`) provides native integration with no external DB, free until June 1 2026, then `$0.25/1K events`.
+
+**Migration path**: Replace the `asyncpg` chat-history reads/writes in `chat_history/` with `FoundryMemoryProvider`. Vector search for relevant history is built-in. Keep PostgreSQL only if Cosmos DB semantic search or custom schema queries are needed.
+
+**Decision gate**: Evaluate in June 2026 once pricing is confirmed and API is stable.
