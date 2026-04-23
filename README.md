@@ -96,16 +96,16 @@ The [AVM AI/ML Landing Zone](https://github.com/Azure/terraform-azurerm-avm-ptn-
 
 | Resource | Example name | Purpose |
 |----------|-------------|---------|
-| Container App Environment | `ai-alz-container-app-env-k76l` | Hosting platform for containerised apps |
-| Container Registry (ACR) | `genaicrk76l` | Private Docker image registry |
-| AI Services (OpenAI) | `ai-foundry-k76l` | GPT-4.1 and embedding model inference |
-| AI Search | `ai-alz-ks-ai-search-k76l` | Document indexing and retrieval |
-| Storage Account | `genaisak76l` | Blob storage for documents and queues |
-| PostgreSQL Flexible Server | `ai-alz-pg-k76l` | Chat history and access control |
-| Key Vault | `genai-kv-k76l` | Secrets management |
-| Application Insights | `ai-alz-appinsights-k76l` | Telemetry and tracing |
-| API Management | `ai-alz-apim-k76l` | AI gateway (rate limiting, token tracking) |
-| AI Foundry Project | `ai-foundry-k76l/project-1` | Model management and evaluation |
+| Container App Environment | `ai-alz-container-app-env-i3ro` | Hosting platform for containerised apps |
+| Container Registry (ACR) | `genaicri3ro` | Private Docker image registry |
+| AI Services (OpenAI) | `ai-foundry-i3ro` | GPT-4.1 and embedding model inference |
+| AI Search | `ai-alz-ks-ai-search-i3ro` | Document indexing and retrieval |
+| Storage Account | `genaisai3ro` | Blob storage for documents and queues |
+| PostgreSQL Flexible Server | `ai-alz-pg-i3ro` | Chat history and access control |
+| Key Vault | `genai-kv-i3ro` | Secrets management |
+| Application Insights | `ai-alz-appinsights-i3ro` | Telemetry and tracing |
+| API Management | `ai-alz-apim-i3ro` | AI gateway (rate limiting, token tracking) |
+| AI Foundry Project | `ai-foundry-i3ro/project-1` | Model management and evaluation |
 
 ### What must be added
 
@@ -119,7 +119,7 @@ Three Container Apps need to be created in the existing Container App Environmen
 
 Each Container App also requires:
 
-- **ACR pull access** — system-assigned managed identity with `AcrPull` role on `genaicrk76l`
+- **ACR pull access** — system-assigned managed identity with `AcrPull` role on `genaicri3ro`
 - **Managed identity RBAC** — each app's identity needs access to Key Vault, Storage, AI Services, and AI Search
 - **Environment variables** — injected from the existing landing zone resources (OpenAI keys, Search endpoint, Storage connection strings, App Insights connection string, PostgreSQL host)
 
@@ -167,13 +167,13 @@ The solution deploys to Container Apps in the AI Landing Zone. The infrastructur
 
 2. Build and push Docker images to ACR:
    ```bash
-   az acr login --name genaicrk76l
-   docker build -f docker/Frontend.Dockerfile -t genaicrk76l.azurecr.io/uc1-web:latest .
-   docker build -f docker/Admin.Dockerfile -t genaicrk76l.azurecr.io/uc1-admin:latest .
-   docker build -f docker/Backend.Dockerfile -t genaicrk76l.azurecr.io/uc1-function:latest .
-   docker push genaicrk76l.azurecr.io/uc1-web:latest
-   docker push genaicrk76l.azurecr.io/uc1-admin:latest
-   docker push genaicrk76l.azurecr.io/uc1-function:latest
+   az acr login --name genaicri3ro
+   docker build -f docker/Frontend.Dockerfile -t genaicri3ro.azurecr.io/uc1-web:latest .
+   docker build -f docker/Admin.Dockerfile -t genaicri3ro.azurecr.io/uc1-admin:latest .
+   docker build -f docker/Backend.Dockerfile -t genaicri3ro.azurecr.io/uc1-function:latest .
+   docker push genaicri3ro.azurecr.io/uc1-web:latest
+   docker push genaicri3ro.azurecr.io/uc1-admin:latest
+   docker push genaicri3ro.azurecr.io/uc1-function:latest
    ```
 
 3. Update the Container Apps to use the pushed images (via `az containerapp update` or `azd deploy`).
