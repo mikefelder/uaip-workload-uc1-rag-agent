@@ -1,0 +1,11 @@
+kind: hosted
+name: uaip-uc1-rag-knowledge-agent
+description: >
+  Worley UAIP UC1 RAG Knowledge Agent — retrieval-augmented generation
+  over engineering documents using Azure AI Search and Azure OpenAI.
+protocols:
+  - protocol: responses
+    version: 1.0.0
+resources:
+  cpu: "0.5"
+  memory: 1Gi

@@ -1,358 +1,130 @@
-# Use Case 1 — RAG Knowledge Assistant
+# Use Case 1 — RAG Knowledge Agent
 
 ## What this is
 
-A customised fork of the [Chat with your data Solution Accelerator](https://github.com/Azure-Samples/chat-with-your-data-solution-accelerator), adapted for Litware Energy's Unified AI Platform PoC.
+A retrieval-augmented generation (RAG) agent built on the **Microsoft Agent Framework SDK** that answers natural language questions using Worley's internal engineering document corpus. It searches Azure AI Search for relevant documents and generates contextual, cited responses using Azure OpenAI (gpt-4.1).
 
-The assistant answers natural language questions by pulling relevant content from internal knowledge sources — contracts, safety reports, operational documents — using retrieval-augmented generation. The emphasis isn't on the chat experience itself; it's on proving the observability, guardrails, and governance capabilities around it.
+The agent serves the **OpenAI Responses API** protocol and is deployed as a Container App behind Azure API Management. It integrates with the UC2 Supervisor Agent as the `search_knowledge` tool.
 
 ## Architecture
 
-Python backend with a React/TypeScript frontend. Azure OpenAI handles inference, Azure AI Search handles document retrieval.
-
 ```
-+------------------+
-|  React Frontend  |
-|  (TypeScript)    |
-+--------+---------+
-         |
-+--------v---------+
-|  Azure API Mgmt  |   AI Gateway: rate limiting, failover, token tracking
-+--------+---------+
-         |
-+--------v------------------------------------------+
-|         Python Backend (Container App)             |
-|                                                    |
-|  +-------------+  +------------------------+      |
-|  | Orchestrator |  | Azure Content Safety   |      |
-|  | (SK/LC/OAI)  |  | (guardrails)           |      |
-|  +------+------+  +------------------------+      |
-|         |                                          |
-|  +------v------+  +------------------------+      |
-|  | Azure OpenAI|  | Azure AI Search        |      |
-|  | (LLM)       |  | (retriever)            |      |
-|  +-------------+  +------------------------+      |
-|                                                    |
-|  OpenTelemetry SDK --> Azure Monitor / App Insights|
-+----------------------------------------------------+
+APIM (/uc1/responses)
+  │
+  ▼
+Container App (Agent Framework SDK — ResponsesHostServer on port 8088)
+  │
+  ├── OpenAIChatClient → Azure OpenAI (gpt-4.1)
+  │
+  └── FunctionTools:
+        ├── search_engineering_docs  → Azure AI Search (hybrid semantic search)
+        │     └── Index: worley-engineering-docs
+        │          ├── EPC valve specifications
+        │          ├── Safety compliance reports
+        │          ├── Piping material standards
+        │          ├── Instrument data sheets
+        │          ├── Contract documents
+        │          └── AI governance policies
+        │
+        └── answer_from_document    → Follow-up QA on specific documents
 ```
 
-### Components
-
-| Component | What it does |
-|-----------|-------------|
-| React Frontend | Chat UI with document upload, speech-to-text, and conversation history |
-| Python Backend | RAG orchestration via Semantic Kernel, LangChain, or OpenAI Functions |
-| Azure OpenAI | LLM inference (GPT-4.1) |
-| Azure AI Search | Document indexing and retrieval |
-| Azure Document Intelligence | PDF/document text extraction |
-| Azure API Management | AI gateway — rate limiting, failover, token tracking |
-| Azure Content Safety | Prompt injection detection and content filtering |
-| PostgreSQL | Chat history and per-department access control |
-| OpenTelemetry | Distributed tracing, exported to Azure Monitor |
-
-## What we changed from the base accelerator
-
-This fork adds the following, aligned to the PoC evaluation criteria:
-
-1. **OpenTelemetry instrumentation** — distributed tracing across the full RAG pipeline:
-   - `code/app.py` — configures Azure Monitor + optional OTLP exporter (dual-export to UC3 governance collector)
-   - `code/backend/batch/utilities/orchestrator/orchestrator_base.py` — `rag.pipeline` root span wrapping the entire orchestration cycle
-   - `code/backend/batch/utilities/tools/question_answer_tool.py` — `rag.retrieval` and `rag.generation` child spans with token/chunk attributes
-   - `code/backend/batch/utilities/helpers/llm_helper.py` — `llm.chat`, `llm.completion`, `llm.embedding` spans with model/deployment attributes
-   - Auto-instrumented HTTP calls via `opentelemetry-instrumentation-httpx`
-
-2. **Azure API Management AI gateway** — 3-way routing in `llm_helper.py`:
-   - **Gateway mode** (`AZURE_APIM_GATEWAY_URL` + `AZURE_APIM_SUBSCRIPTION_KEY` set) — all LLM calls route through APIM; APIM authenticates to AI Foundry via managed identity; UC1 authenticates to APIM with subscription key
-   - **API key mode** — direct to Azure OpenAI with key-based auth (original behaviour)
-   - **RBAC mode** — direct to Azure OpenAI with `DefaultAzureCredential` (managed identity)
-   - Routing applies to all client creation paths: `get_llm()`, `get_streaming_llm()`, `get_chat_llm()`, `get_embedding_llm()`
-
-3. Content Safety guardrails — prompt injection detection and content filtering via Azure Content Safety
-4. LLM-as-Judge evaluation pipeline — automated scoring for correctness, relevance, and groundedness
-5. Governance and access control — Entra ID auth with AI Search security filters for per-department data scoping
-6. Cost management dashboards — token usage tracking, estimated spend, budget alerts
-
-## Tech stack
-
-| Layer | Technology |
-|-------|-----------|
-| Frontend | React, TypeScript, Vite |
-| Backend | Python 3.11+, Flask |
-| Orchestration | Semantic Kernel / LangChain / OpenAI Functions |
-| LLM | Azure OpenAI (GPT-4.1) |
-| Search | Azure AI Search |
-| Document processing | Azure Document Intelligence |
-| Database | PostgreSQL (default) or Cosmos DB |
-| Observability | OpenTelemetry, exported to Azure Monitor / Application Insights |
-| AI gateway | Azure API Management |
-| Infrastructure | Bicep, deployed via `azd` |
-
-## Azure AI Landing Zone — additional resources required
-
-The [AVM AI/ML Landing Zone](https://github.com/Azure/terraform-azurerm-avm-ptn-aiml-landing-zone) Terraform module provisions the platform layer but does **not** include the app-level compute needed to run this solution. The following resources must be added to the landing zone (via Terraform or manually) before deployment:
-
-### What the landing zone provides
-
-| Resource | Example name | Purpose |
-|----------|-------------|---------|
-| Container App Environment | `ai-alz-container-app-env-i3ro` | Hosting platform for containerised apps |
-| Container Registry (ACR) | `genaicri3ro` | Private Docker image registry |
-| AI Services (OpenAI) | `ai-foundry-i3ro` | GPT-4.1 and embedding model inference |
-| AI Search | `ai-alz-ks-ai-search-i3ro` | Document indexing and retrieval |
-| Storage Account | `genaisai3ro` | Blob storage for documents and queues |
-| PostgreSQL Flexible Server | `ai-alz-pg-i3ro` | Chat history and access control |
-| Key Vault | `genai-kv-i3ro` | Secrets management |
-| Application Insights | `ai-alz-appinsights-i3ro` | Telemetry and tracing |
-| API Management | `ai-alz-apim-i3ro` | AI gateway (rate limiting, token tracking) |
-| AI Foundry Project | `ai-foundry-i3ro/project-1` | Model management and evaluation |
-
-### What must be added
-
-Three Container Apps need to be created in the existing Container App Environment:
-
-| Container App | Role | Ingress | Docker context |
-|---------------|------|---------|----------------|
-| `web` | Main frontend + API (Flask/uwsgi) | External (public) | `docker/Frontend.Dockerfile` |
-| `adminweb` | Admin UI (Streamlit) | External or internal | `docker/Admin.Dockerfile` |
-| `function` | Batch processor (Azure Functions) | Internal only | `docker/Backend.Dockerfile` |
-
-Each Container App also requires:
-
-- **ACR pull access** — system-assigned managed identity with `AcrPull` role on `genaicri3ro`
-- **Managed identity RBAC** — each app's identity needs access to Key Vault, Storage, AI Services, and AI Search
-- **Environment variables** — injected from the existing landing zone resources (OpenAI keys, Search endpoint, Storage connection strings, App Insights connection string, PostgreSQL host)
-
-The Terraform outputs should expose:
-- `SERVICE_WEB_RESOURCE_NAME` — name of the web Container App
-- `SERVICE_ADMINWEB_RESOURCE_NAME` — name of the admin Container App
-- `SERVICE_FUNCTION_RESOURCE_NAME` — name of the function Container App
-- `AZURE_CONTAINER_REGISTRY_ENDPOINT` — ACR login server
-
-These outputs are referenced by `azure.yaml` during `azd deploy`.
-
-### Other landing zone issues encountered
-
-| Issue | Resolution |
-|-------|-----------|
-| Key Vault secret creation returned 403 | Deploying identity needed Secret Get/Set/List in the vault's access policy (or `Key Vault Secrets Officer` role if using RBAC mode) |
-| AzureBastionSubnet blocked by `RequestDisallowedByPolicy` | Azure Policy on the subscription denied Bastion subnet creation; required a policy exemption or disabling the jump VM module |
-| `enable_rbac_authorization` deprecation warning | Renamed to `rbac_authorization_enabled` (required before azurerm v5.0) |
-| `multiplier` attribute deprecated on private DNS zones | 83 instances; cosmetic warning, does not block deployment |
-
-## Getting started
-
-### Prerequisites
-
-- Azure subscription with [Azure OpenAI access](https://learn.microsoft.com/en-us/azure/ai-services/openai/overview#how-do-i-get-access-to-azure-openai)
-- Sufficient [Azure OpenAI quota](./docs/QuotaCheck.md) in your target region
-- Python 3.11+
-- Node.js 18+
-- The AI Landing Zone deployed with the additional Container App resources (see above)
-
-### Local development
-
-Follow the [local development setup guide](./docs/LocalDevelopmentSetup.md) to run the app on your machine.
-
-If you're not using devcontainers, see [NON_DEVCONTAINER_SETUP.md](./docs/NON_DEVCONTAINER_SETUP.md).
-
-### Deploy to Azure
-
-The solution deploys to Container Apps in the AI Landing Zone. The infrastructure (Container App Environment, ACR, and the three Container Apps) must already exist via Terraform.
-
-1. Generate your `.env` from the deployed resources:
-   ```bash
-   ./scripts/generate_env.sh -g <RESOURCE_GROUP>
-   ```
-
-2. Build and push Docker images to ACR:
-   ```bash
-   az acr login --name genaicri3ro
-   docker build -f docker/Frontend.Dockerfile -t genaicri3ro.azurecr.io/uc1-web:latest .
-   docker build -f docker/Admin.Dockerfile -t genaicri3ro.azurecr.io/uc1-admin:latest .
-   docker build -f docker/Backend.Dockerfile -t genaicri3ro.azurecr.io/uc1-function:latest .
-   docker push genaicri3ro.azurecr.io/uc1-web:latest
-   docker push genaicri3ro.azurecr.io/uc1-admin:latest
-   docker push genaicri3ro.azurecr.io/uc1-function:latest
-   ```
-
-3. Update the Container Apps to use the pushed images (via `az containerapp update` or `azd deploy`).
-
-See the [deployment guide](./docs/LOCAL_DEPLOYMENT.md) for more details including database selection (PostgreSQL or Cosmos DB).
-
-#### Supported regions
-
-- Australia East
-- East US 2
-- Japan East
-- UK South
-
-### AI Gateway environment variables
-
-The following variables control APIM gateway routing. When both are set, all LLM calls
-route through APIM instead of calling Azure OpenAI directly. See `.env.sample` for details.
-
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `AZURE_APIM_GATEWAY_URL` | For gateway mode | APIM gateway base URL (e.g. `https://ai-alz-apim-fp3g.azure-api.net`) |
-| `AZURE_APIM_SUBSCRIPTION_KEY` | For gateway mode | APIM subscription key (primary or secondary) |
-| `OTEL_EXPORTER_OTLP_ENDPOINT` | No | OTLP gRPC endpoint for UC3 governance collector (e.g. `http://localhost:4317`) |
-| `APPLICATIONINSIGHTS_CONNECTION_STRING` | Yes (in Azure) | Azure Monitor connection string for traces |
-
-### After deployment
-
-1. [Set up authentication](./docs/azure_app_service_auth_setup.md).
-2. Open the admin site to upload documents.
-3. Start chatting via the web app URL.
-
-Sample contract data is in the [data/](./data/) directory.
-
-## Sample data
-
-The `data/contract_data/` directory has sample documents for a contract review and summarisation scenario — showing how the RAG assistant can help people query a collection of contract documents.
-
-For more details:
-- [Contract Assistance](docs/contract_assistance.md)
-- [Employee Assistance](docs/employee_assistance.md)
-
-Some of the sample data was generated using AI and is for illustrative purposes only.
-
-## Further reading
-
-| Topic | Link |
-|-------|------|
-| Local Deployment | [LOCAL_DEPLOYMENT.md](docs/LOCAL_DEPLOYMENT.md) |
-| PostgreSQL Setup | [postgreSQL.md](docs/postgreSQL.md) |
-| Conversation Flow Options | [conversation_flow_options.md](docs/conversation_flow_options.md) |
-| Supported File Types | [supported_file_types.md](docs/supported_file_types.md) |
-| Speech-to-Text | [speech_to_text.md](docs/speech_to_text.md) |
-| Teams Extension | [teams_extension.md](docs/teams_extension.md) |
-| Troubleshooting | [TroubleShootingSteps.md](docs/TroubleShootingSteps.md) |
-| Model Configuration | [model_configuration.md](docs/model_configuration.md) |
-| Best Practices | [best_practices.md](docs/best_practices.md) |
-
-## Licensing
-
-This repository is licensed under the [MIT License](LICENSE.md).
-
-The data set under `/data` is licensed under the [CDLA-Permissive-2 License](CDLA-Permissive-2.md).
-
----
-
-## April 2026 Microsoft Foundry — Impact Analysis & Roadmap
-
-Microsoft's April 2026 Foundry announcements introduce several capabilities that directly improve the quality, observability, and governance of the UC1 RAG pipeline. This section captures the analysis, action items, and implementation plan.
-
-### Impact Summary
-
-| Feature | GA / Preview | UC1 Impact | Priority |
-|-|-|-|-|
-| Foundry RAG Evaluators (`azure-ai-evaluation`) | GA | Add `GroundednessEvaluator`, `RetrievalEvaluator`, `RelevanceEvaluator` as pytest CI gate | **IMMEDIATE** |
-| Foundry Observability — OTel trace linkage | GA | Evaluation results now link back to individual OTel traces; enables per-query quality debugging | **IMMEDIATE** |
-| AI Red Teaming Agent | GA | Run adversarial XPIA (indirect prompt injection) tests against the RAG pipeline in CI; the document corpus is an injection surface | Short-term |
-| Foundry Toolbox (MCP) | Public Preview | Replace direct Azure AI Search SDK calls with the managed `builtin.ai_search` MCP tool via Foundry Toolbox; centralises key management and auth | Medium-term |
-| Foundry Memory | Public Preview | Replace PostgreSQL chat-history with `FoundryMemoryProvider` for cross-session context; eliminates the PostgreSQL dependency for pure chat-history use cases | Medium-term |
-| Agent 365 Tenant Registry | GA | Register the UC1 RAG assistant as a tenant-managed agent with lifecycle policies and Defender/Purview integration | Medium-term |
-
----
-
-### Immediate Action: RAG Quality CI Gate
-
-**Why**: UC1 is a production RAG assistant. Without automated quality gates, hallucinated or under-grounded responses can reach users. The Foundry Evaluation SDK provides LLM-as-a-judge evaluators that enforce minimum quality thresholds on every PR.
-
-**What to implement**:
-
-1. Add `azure-ai-evaluation>=0.5.0` to `pyproject.toml` dev dependencies.
-2. Create `code/tests/evaluation/test_rag_quality.py` with three evaluators running against a golden JSONL dataset:
-   - **`GroundednessEvaluator`** — ensures every answer is traceable to retrieved context (score ≥ 3/5)
-   - **`RetrievalEvaluator`** — confirms context chunks are relevant to the query (score ≥ 3/5)
-   - **`RelevanceEvaluator`** — validates the answer addresses the user's question (score ≥ 3/5)
-3. Create `code/tests/evaluation/data/rag_golden_dataset.jsonl` — golden Q&A pairs drawn from the sample contract dataset.
-4. Wire into `Makefile` target `make eval` and GitHub Actions CI job `rag-quality-gate`.
-
-**SDK API** (`azure-ai-evaluation`):
-
-```python
-from azure.ai.evaluation import (
-    GroundednessEvaluator,
-    RetrievalEvaluator,
-    RelevanceEvaluator,
-    AzureOpenAIModelConfiguration,
-    evaluate,
-)
-
-model_config = AzureOpenAIModelConfiguration(
-    azure_endpoint=os.environ["AZURE_OPENAI_ENDPOINT"],
-    azure_deployment=os.environ["AZURE_OPENAI_DEPLOYMENT_NAME"],  # gpt-4o-mini for eval
-    api_version="2024-12-01-preview",
-)
-
-result = evaluate(
-    data="tests/evaluation/data/rag_golden_dataset.jsonl",
-    evaluators={
-        "groundedness": GroundednessEvaluator(model_config),
-        "retrieval":    RetrievalEvaluator(model_config),
-        "relevance":    RelevanceEvaluator(model_config),
-    },
-    evaluator_config={
-        "groundedness": {"column_mapping": {"query": "${data.query}", "context": "${data.context}", "response": "${data.response}"}},
-        "retrieval":    {"column_mapping": {"query": "${data.query}", "context": "${data.context}"}},
-        "relevance":    {"column_mapping": {"query": "${data.query}", "response": "${data.response}"}},
-    },
-)
-# CI gate: fail if mean score < 3.0
-assert result["metrics"]["groundedness.groundedness"] >= 3.0
-assert result["metrics"]["retrieval.retrieval"] >= 3.0
-assert result["metrics"]["relevance.relevance"] >= 3.0
+### Azure Services
+
+| Service | Purpose |
+|---------|---------|
+| Azure Container Apps | Hosts the RAG agent |
+| Azure OpenAI (gpt-4.1) | LLM for response generation |
+| Azure AI Search | Document indexing and hybrid semantic search |
+| Azure API Management | AI Gateway — routing, rate limiting, trace injection |
+| Azure Application Insights | Observability and OTEL telemetry |
+
+## API
+
+```
+POST /responses    — OpenAI Responses API (query the knowledge base)
+GET  /readiness    — Health check
 ```
 
-Scores are 1–5 (pass threshold ≥ 3). Results can optionally be logged to a Foundry project for trend tracking.
+### Example Request
 
-**Implementation status**: See `code/tests/evaluation/test_rag_quality.py` (implemented).
-
----
-
-### Short-term Action: AI Red Teaming for Indirect Prompt Injection
-
-**Why**: UC1 retrieves content from user-uploaded documents. A malicious document could embed instructions that manipulate the LLM — an Indirect Prompt Injection (XPIA) attack. The Foundry `IndirectAttackEvaluator` (GA) detects whether retrieved context is being exploited.
-
-**What to implement**:
-
-```python
-from azure.ai.evaluation import IndirectAttackEvaluator
-
-xpia_eval = IndirectAttackEvaluator(
-    azure_ai_project={"subscription_id": "...", "resource_group": "...", "project_name": "..."},
-    credential=DefaultAzureCredential(),
-)
+```json
+{
+  "input": "What are the valve specifications for Project Alpha?"
+}
 ```
 
-Run against the same golden dataset in a weekly scheduled CI job (not every PR — this calls Content Safety and incurs usage costs).
+### Example Response
 
----
+The agent searches the engineering knowledge base, retrieves relevant documents (valve specification matrix, instrument data sheets), and generates a cited response with ASME/API/IEC standards references.
 
-### Medium-term: Foundry Toolbox (MCP for AI Search)
+## Knowledge Base
 
-**Why**: UC1 currently calls `azure-search-documents` SDK directly from `llm_helper.py`. The Foundry Toolbox wraps AI Search as a managed MCP tool with centralised Entra identity, no SDK changes in application code, and automatic audit logging through APIM.
+The AI Search index `worley-engineering-docs` contains mock engineering documents for the PoC:
 
-**Migration path**:
+| Document | Category | Source |
+|----------|----------|--------|
+| Project Alpha — Valve Specification Matrix | EPC Specification | SP-MECH-VAL-001 Rev 3 |
+| Project Alpha — Safety Compliance Report Q4 2025 | Safety Report | SR-HSE-Q4-2025-001 |
+| Worley Standard — Piping Material Specification | Engineering Standard | WS-PIP-MAT-002 Rev 7 |
+| Project Alpha — Master Services Agreement | Contract | MSA-PA-2024-001 |
+| Instrument Data Sheet: ESD Valve XV-3042 | Instrument Data Sheet | DS-INS-XV3042 Rev 2 |
+| Worley UAIP — AI Model Governance Policy | Governance Policy | POL-UAIP-GOV-001 Rev 1 |
 
-```python
-# Current (direct SDK)
-from azure.search.documents import SearchClient
-# → Replace with Foundry Toolbox MCP endpoint
-# POST https://<foundry>.services.ai.azure.com/api/projects/<project>/toolbox/search-tools/mcp
-# tool: builtin.ai_search / builtin.web_search
+Documents are populated via `scripts/populate_index.py`.
+
+## Project Structure
+
+```
+services/rag-agent/
+  main.py              # Agent Framework entrypoint (ResponsesHostServer)
+  agent.yaml           # Foundry deployment descriptor
+  Dockerfile           # Container image (port 8088)
+  requirements.txt     # Dependencies
+  tools/
+    search.py          # AI Search hybrid semantic search tool
+    document_qa.py     # Document-specific follow-up QA tool
+
+infra/                 # Terraform deployment
+  main.container_app.tf   # Container App (port 8088, /readiness probes)
+  main.apim.tf            # APIM routes (/responses, /readiness)
+  main.identity.tf        # UAMI + RBAC (OpenAI User, AcrPull, Search Reader)
+  main.monitor.tf         # Application Insights
+  data.tf                 # Data sources for ALZ resources
+  terraform.tfvars.msdn   # MSDN PoC values
+
+scripts/
+  populate_index.py    # Create AI Search index and upload mock documents
 ```
 
-No changes to the RAG orchestration logic — only the retrieval call site changes.
+## Deployment
 
----
+```bash
+# Populate AI Search index (requires public access or VPN)
+python3 scripts/populate_index.py
 
-### Medium-term: Foundry Memory (Replace PostgreSQL Chat History)
+# Build image
+az acr build --registry genaicri40e --image uc1-rag-agent:latest \
+  --file services/rag-agent/Dockerfile services/rag-agent \
+  --platform linux/amd64
 
-**Why**: PostgreSQL is the highest-operational-cost component in UC1 (requires a Flexible Server, schema migrations, connection pooling). For pure chat-history use cases, Foundry Memory (`FoundryMemoryProvider`) provides native integration with no external DB, free until June 1 2026, then `$0.25/1K events`.
+# Deploy infrastructure
+cd infra
+terraform init
+terraform plan -var-file=terraform.tfvars.msdn -out=tfplan
+terraform apply tfplan
+```
 
-**Migration path**: Replace the `asyncpg` chat-history reads/writes in `chat_history/` with `FoundryMemoryProvider`. Vector search for relevant history is built-in. Keep PostgreSQL only if Cosmos DB semantic search or custom schema queries are needed.
+## Integration with UC2 Supervisor
 
-**Decision gate**: Evaluate in June 2026 once pricing is confirmed and API is stable.
+The UC2 Supervisor Agent invokes UC1 via the `search_knowledge` FunctionTool, which calls `POST /uc1/responses` through APIM. This enables the supervisor to incorporate knowledge retrieval into multi-agent workflows.
+
+## Reference Architecture Alignment
+
+| Pattern | Implementation |
+|---------|---------------|
+| RAG Pipeline | Azure AI Search (hybrid semantic) + Azure OpenAI generation |
+| Knowledge Layer | Document index with EPC specs, safety reports, contracts |
+| Agent Protocol | OpenAI Responses API via Agent Framework SDK |
+| Observability | OTEL traces via Agent Framework + App Insights |
+| Security | Managed identity for Search + OpenAI, no API keys in code |
